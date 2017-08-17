@@ -29,6 +29,10 @@ class WC_Helper {
 	 * Loads the helper class, runs on init.
 	 */
 	public static function load() {
+		// Check to see if the user has permission to manage plugins before proceeding.
+		if ( ! current_user_can( 'manage_plugins' ) {
+			return;
+		}
 		add_action( 'current_screen', array( __CLASS__, 'current_screen' ) );
 		add_action( 'woocommerce_helper_output', array( __CLASS__, 'render_helper_output' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_enqueue_scripts' ) );
