@@ -492,6 +492,39 @@ class WC_Admin_Setup_Wizard {
 		<form method="post">
 			<?php $this->wc_setup_wcs_tout(); ?>
 
+			<table>
+				<tr>
+					<th>Shipping Zone</th>
+					<th>Shipping Method</th>
+				</tr>
+				<tr>
+					<td><?php echo $country_name; ?></td>
+					<td>
+						<select id="shipping_method" name="shipping_method" class="wc-enhanced-select">
+							<option value="live_rates" selected>
+								<?php esc_html_e( 'Live Rates', 'woocommerce' ); ?>
+							</option>
+							<option value="free_shipping" selected>
+								<?php esc_html_e( 'Free Shipping', 'woocommerce' ); ?>
+							</option>
+							<option value="flat_rate" selected>
+								<?php esc_html_e( 'Flat Rate', 'woocommerce' ); ?>
+							</option>
+						</select>
+					</td>
+					<td>
+						Get USPS live rates to cover shipping. Powered by Jetpack.
+					</td>
+					<td>
+						<input class="wc-wizard-service-list-toggle" id="wc-wizard-service-list-toggle" type="checkbox">
+						<label for="wc-wizard-service-list-toggle"></label>
+					</td>
+				</tr>
+				<tr>
+					<td><?php echo "Locations not covered by your other zones."; ?></td>
+				</tr>
+			</table>
+
 			<table class="form-table">
 				<tr>
 					<th scope="row"><label for="weight_unit"><?php esc_html_e( 'Weight unit', 'woocommerce' ); ?></label></th>
