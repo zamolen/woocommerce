@@ -193,6 +193,7 @@ class WC_Admin_Assets {
 
 			wp_localize_script( 'wc-admin-product-meta-boxes', 'woocommerce_admin_product_meta_boxes', array(
 				'i18n_select_images'  => esc_js( __( 'Select gallery images', 'woocommerce' ) ),
+				'i18n_delete_image'   => esc_js( __( 'Delete image', 'woocommerce' ) ),
 				'i18n_update_gallery' => esc_js( __( 'Update gallery', 'woocommerce' ) ),
 			) );
 

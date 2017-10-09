@@ -116,6 +116,10 @@ class WC_Admin_Post_Types {
 	public function before_permalink( $post ) {
 		global $post, $thepostid, $product_object;
 
+		if ( $post->post_type !== 'product' ) {
+			return;
+		}
+
 		$thepostid      = $post->ID;
 		$product_object = $thepostid ? wc_get_product( $thepostid ) : new WC_Product;
 		?>
@@ -125,37 +129,35 @@ class WC_Admin_Post_Types {
 				<div id="product_images_container">
 					<ul class="product_images">
 						<?php
-							$product_image_gallery = get_post_meta( $post->ID, '_product_image_gallery', true );
-							$attachments           = wp_parse_id_list( array_merge( array( get_post_thumbnail_id() ), explode( ',', $product_image_gallery ) ) );
-							$update_meta           = false;
-							$updated_gallery_ids   = array();
+						$product_image_gallery = get_post_meta( $post->ID, '_product_image_gallery', true );
+						$attachments           = wp_parse_id_list( array_merge( array( get_post_thumbnail_id() ), explode( ',', $product_image_gallery ) ) );
+						$update_meta           = false;
+						$updated_gallery_ids   = array();
 
-							if ( ! empty( $attachments ) ) {
-								foreach ( $attachments as $attachment_id ) {
-									$attachment = wp_get_attachment_image( $attachment_id, 'thumbnail' );
+						if ( ! empty( $attachments ) ) {
+							foreach ( $attachments as $attachment_id ) {
+								$attachment = wp_get_attachment_image( $attachment_id, 'thumbnail' );
 
-									// if attachment is empty skip
-									if ( empty( $attachment ) ) {
-										$update_meta = true;
-										continue;
-									}
-
-									echo '<li class="image" data-attachment_id="' . esc_attr( $attachment_id ) . '">
-										' . $attachment . '
-										<ul class="actions">
-											<li><a href="#" class="delete tips" data-tip="' . esc_attr__( 'Delete image', 'woocommerce' ) . '">' . __( 'Delete', 'woocommerce' ) . '</a></li>
-										</ul>
-									</li>';
-
-									// rebuild ids to be saved
-									$updated_gallery_ids[] = $attachment_id;
+								// if attachment is empty, skip.
+								if ( empty( $attachment ) ) {
+									$update_meta = true;
+									continue;
 								}
 
-								// need to update product meta to set new gallery ids
-								if ( $update_meta ) {
-									update_post_meta( $post->ID, '_product_image_gallery', implode( ',', $updated_gallery_ids ) );
-								}
+								echo '<li class="image" data-attachment_id="' . esc_attr( $attachment_id ) . '">
+									<a href="#" class="edit-attachment">' . $attachment . '</a>
+									<ul class="actions"><li><a href="#" class="delete tips" data-tip="' . esc_attr__( 'Delete image', 'woocommerce' ) . '">' . esc_html__( 'Delete image', 'woocommerce' ) . '</a></li></ul>
+								</li>';
+
+								// rebuild ids to be saved.
+								$updated_gallery_ids[] = $attachment_id;
 							}
+
+							// need to update product meta to set new gallery ids.
+							if ( $update_meta ) {
+								update_post_meta( $post->ID, '_product_image_gallery', implode( ',', $updated_gallery_ids ) );
+							}
+						}
 						?>
 						<li class="add_product_images hide-if-no-js">
 							<a href="#" data-choose="<?php esc_attr_e( 'Add images to product gallery', 'woocommerce' ); ?>" data-update="<?php esc_attr_e( 'Add to gallery', 'woocommerce' ); ?>" data-delete="<?php esc_attr_e( 'Delete image', 'woocommerce' ); ?>" data-text="<?php esc_attr_e( 'Delete', 'woocommerce' ); ?>" title="<?php esc_attr_e( 'Add product gallery images', 'woocommerce' ); ?>"><span class="dashicons dashicons-plus-alt"></span></a>
@@ -183,17 +185,20 @@ class WC_Admin_Post_Types {
 					<label for="product-type"><?php esc_attr_e( 'SKU' ); ?></label>
 					<input type="text" name="_sku" class="woocommerce-edit-product-field woocommerce-edit-product-field__sku" value="<?php echo esc_attr( $product_object->get_sku( 'edit' ) ); ?>" />
 				</div>
-				<div class="woocommerce-edit-product-field-wrapper woocommerce-edit-product-field-wrapper--first">
-					<label for="product-type"><?php esc_attr_e( 'Regular price' ); ?></label>
-					<div class="woocommerce-edit-product-field woocommerce-edit-product-field__price woocommerce-edit-product-field__regular_price">
-						<span><?php echo esc_html( get_woocommerce_currency_symbol() ); ?></span><input type="text" name="_regular_price" placeholder="<?php echo esc_attr( wc_format_decimal( '0.00' ) ); ?>" value="<?php echo esc_attr( $product_object->get_regular_price( 'edit' ) ); ?>" />
+				<div class="pricing show_if_simple show_if_external">
+					<div class="woocommerce-edit-product-field-wrapper woocommerce-edit-product-field-wrapper--first">
+						<label for="product-type"><?php esc_attr_e( 'Regular price' ); ?></label>
+						<div class="woocommerce-edit-product-field woocommerce-edit-product-field__price woocommerce-edit-product-field__regular_price">
+							<span><?php echo esc_html( get_woocommerce_currency_symbol() ); ?></span><input type="text" name="_regular_price" placeholder="<?php echo esc_attr( wc_format_decimal( '0.00' ) ); ?>" value="<?php echo esc_attr( $product_object->get_regular_price( 'edit' ) ); ?>" />
+						</div>
 					</div>
-				</div>
-				<div class="woocommerce-edit-product-field-wrapper woocommerce-edit-product-field-wrapper--last">
-					<label for="product-type"><?php esc_attr_e( 'Sale price' ); ?></label>
-					<div class="woocommerce-edit-product-field woocommerce-edit-product-field__price woocommerce-edit-product-field__sale_price">
-						<span><?php echo esc_html( get_woocommerce_currency_symbol() ); ?></span><input type="text" name="_sale_price" placeholder="&ndash;" value="<?php echo esc_attr( $product_object->get_sale_price( 'edit' ) ); ?>" />
+					<div class="woocommerce-edit-product-field-wrapper woocommerce-edit-product-field-wrapper--last">
+						<label for="product-type"><?php esc_attr_e( 'Sale price' ); ?></label>
+						<div class="woocommerce-edit-product-field woocommerce-edit-product-field__price woocommerce-edit-product-field__sale_price">
+							<span><?php echo esc_html( get_woocommerce_currency_symbol() ); ?></span><input type="text" name="_sale_price" placeholder="&ndash;" value="<?php echo esc_attr( $product_object->get_sale_price( 'edit' ) ); ?>" />
+						</div>
 					</div>
+					<?php do_action( 'woocommerce_product_options_pricing' ); ?>
 				</div>
 				<div class="woocommerce-edit-product-field-wrapper">
 					<label for="product-type"><?php esc_attr_e( 'Short description' ); ?></label>
@@ -223,6 +228,10 @@ class WC_Admin_Post_Types {
 	}
 
 	public function after_title( $post ) {
+		if ( $post->post_type !== 'product' ) {
+			return;
+		}
+
 		?>
 				</div><!--/woocommerce-edit-product-fields-wrapper-->
 			</div><!--/woocommerce-edit-product-fields-wrapper-->

@@ -310,6 +310,7 @@ class WC_Meta_Box_Product_Data {
 		$classname    = WC_Product_Factory::get_product_classname( $post_id, $product_type ? $product_type : 'simple' );
 		$product      = new $classname( $post_id );
 		$attributes   = self::prepare_attributes();
+		$images       = isset( $_POST['product_image_gallery'] ) ? array_filter( explode( ',', $_POST['product_image_gallery'] ) ) : array();
 		$stock        = null;
 
 		// Handle stock changes.
@@ -360,6 +361,8 @@ class WC_Meta_Box_Product_Data {
 			'reviews_allowed'    => ! empty( $_POST['comment_status'] ) && 'open' === $_POST['comment_status'],
 			'attributes'         => $attributes,
 			'default_attributes' => self::prepare_set_attributes( $attributes, 'default_attribute_' ),
+			'image_id'           => array_shift( $images ),
+			'gallery_image_ids'  => $images,
 		) );
 
 		if ( is_wp_error( $errors ) ) {

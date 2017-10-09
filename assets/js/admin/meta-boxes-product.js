@@ -1,4 +1,4 @@
-/*global woocommerce_admin_meta_boxes */
+/*global woocommerce_admin_meta_boxes, woocommerce_admin_product_meta_boxes */
 jQuery( function( $ ) {
 
 	// Prevent enter submitting post form.
@@ -549,9 +549,10 @@ jQuery( function( $ ) {
 	});
 
 	// Product gallery file uploads.
-	var product_gallery_frame;
-	var $image_gallery_ids = $( '#product_image_gallery' );
-	var $product_images    = $( '#product_images_container' ).find( 'ul.product_images' );
+	var $product_images = $( '#product_images_container' ).find( 'ul.product_images' ),
+		product_gallery_frame,
+		product_gallery_edit_frame,
+		gallery_selected_ids;
 
 	$( '.add_product_images' ).on( 'click', 'a', function( event ) {
 		var $el = $( this );
@@ -580,29 +581,105 @@ jQuery( function( $ ) {
 			]
 		});
 
-		// When an image is selected, run a callback.
 		product_gallery_frame.on( 'select', function() {
-			var selection = product_gallery_frame.state().get( 'selection' );
-			var attachment_ids = $image_gallery_ids.val();
-
-			selection.map( function( attachment ) {
-				attachment = attachment.toJSON();
-
-				if ( attachment.id ) {
-					attachment_ids   = attachment_ids ? attachment_ids + ',' + attachment.id : attachment.id;
-					var attachment_image = attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url;
-
-					$product_images.append( '<li class="image" data-attachment_id="' + attachment.id + '"><img src="' + attachment_image + '" /><ul class="actions"><li><a href="#" class="delete" title="' + $el.data('delete') + '">' + $el.data('text') + '</a></li></ul></li>' );
-					$product_images.append( $product_images.find( '.add_product_images' ) );
-				}
-			});
-
-			$image_gallery_ids.val( attachment_ids );
-		});
-
-		// Finally, open the modal.
+			product_gallery_select_callback( product_gallery_frame, true );
+		} );
 		product_gallery_frame.open();
 	});
+
+	$product_images.on( 'click', '.edit-attachment', function( e ) {
+		e.preventDefault();
+		e.stopPropagation();
+
+		gallery_selected_ids = $product_images.find( '.image' ).map( function() {
+			return $( this ).data( 'attachment_id' );
+		} ).get();
+
+		gallery_selected_ids.unshift( $( this ).closest( 'li.image' ).data( 'attachment_id' ) );
+
+		// If the media frame already exists, reopen it.
+		if ( product_gallery_edit_frame ) {
+			product_gallery_edit_frame.open();
+			return;
+		}
+
+		product_gallery_edit_frame = wp.media.frames.product_gallery = wp.media({
+			title: woocommerce_admin_product_meta_boxes.i18n_select_images,
+			button: {
+				text: woocommerce_admin_product_meta_boxes.i18n_update_gallery
+			},
+			states: [
+				new wp.media.controller.Library({
+					title     : woocommerce_admin_product_meta_boxes.i18n_select_images,
+					filterable: 'all',
+					multiple  : true
+				})
+			]
+		});
+
+		// When an image is selected, run a callback.
+		product_gallery_edit_frame.on( 'select', function() {
+			product_gallery_select_callback( product_gallery_edit_frame, false );
+		} );
+
+		product_gallery_edit_frame.on( 'open', function() {
+			var selection = product_gallery_edit_frame.state().get( 'selection' );
+
+			selection.reset();
+
+			gallery_selected_ids.forEach( function( id ) {
+				var attachment = wp.media.attachment( id );
+				attachment.fetch();
+				selection.add( attachment ? [ attachment ] : [] );
+			} );
+		} );
+
+		product_gallery_edit_frame.open();
+	} );
+
+	/**
+	 * Takes images from the frame and stores the value to a hidden input, and appends images to gallery.
+	 */
+	function product_gallery_select_callback( frame, append ) {
+		var attachment_ids          = [],
+			existing_attachment_ids = $product_images.find( '.image' ).map( function() {
+				return parseInt( $( this ).data( 'attachment_id' ), 10 );
+			} ).get();
+
+		if ( append ) {
+			attachment_ids = existing_attachment_ids.slice(0);
+		}
+
+		frame.state().get( 'selection' ).map( function( attachment ) {
+			attachment = attachment.toJSON();
+
+			if ( ! attachment.id ) {
+				return;
+			}
+
+			var attachment_id = parseInt( attachment.id, 10 );
+
+			attachment_ids.push( attachment_id );
+
+			if ( -1 === $.inArray( attachment_id, existing_attachment_ids ) ) {
+				var attachment_image = attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url;
+
+				$product_images.append( '<li class="image" data-attachment_id="' + attachment_id + '"><a href="#" class="edit-attachment"><img src="' + attachment_image + '" /></a><ul class="actions"><li><a href="#" class="delete" title="' + woocommerce_admin_product_meta_boxes.i18n_delete_image + '">' + woocommerce_admin_product_meta_boxes.i18n_delete_image + '</a></li></ul></li>' );
+			}
+		} );
+
+		if ( ! append ) {
+			existing_attachment_ids.map( function( attachment_id ) {
+				if ( -1 === $.inArray( attachment_id, attachment_ids ) ) {
+					$product_images.find( 'li.image[data-attachment_id=' + attachment_id + ']' ).remove();
+				}
+			} );
+		}
+
+		$( '#product_image_gallery' ).val( attachment_ids.join() );
+
+		$product_images.append( $product_images.find( '.add_product_images' ) );
+	}
 
 	// Image ordering.
 	$product_images.sortable({
@@ -628,7 +705,7 @@ jQuery( function( $ ) {
 				attachment_ids = attachment_ids + attachment_id + ',';
 			});
 
-			$image_gallery_ids.val( attachment_ids );
+			$( '#product_image_gallery' ).val( attachment_ids );
 		}
 	});
 
@@ -643,11 +720,10 @@ jQuery( function( $ ) {
 			attachment_ids = attachment_ids + attachment_id + ',';
 		});
 
-		$image_gallery_ids.val( attachment_ids );
+		$( '#product_image_gallery' ).val( attachment_ids );
 
 		// Remove any lingering tooltips.
-		$( '#tiptip_holder' ).removeAttr( 'style' );
-		$( '#tiptip_arrow' ).removeAttr( 'style' );
+		$( '#tiptip_holder, #tiptip_arrow' ).removeAttr( 'style' );
 
 		return false;
 	});
