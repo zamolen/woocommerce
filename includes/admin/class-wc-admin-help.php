@@ -9,10 +9,12 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly
+	exit;
 }
 
-if ( ! class_exists( 'WC_Admin_Help', false ) ) :
+if ( class_exists( 'WC_Admin_Help', false ) ) {
+	return new WC_Admin_Help();
+}
 
 /**
  * WC_Admin_Help Class.
@@ -39,163 +41,123 @@ class WC_Admin_Help {
 		$video_map = array(
 			'wc-settings' => array(
 				'title' => __( 'General Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/mz2l10u5f6.jsonp?',
+				'id'    => 'ZD5Cc2xqvCM',
 			),
 			'wc-settings-general' => array(
 				'title' => __( 'General Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/mz2l10u5f6.jsonp?',
+				'id'    => 'ZD5Cc2xqvCM',
 			),
 			'wc-settings-products' => array(
 				'title' => __( 'Product Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/lolkan4fxf.jsonp?',
-			),
-			'wc-settings-products-display' => array(
-				'title' => __( 'Display Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/lolkan4fxf.jsonp?time=55s&',
-			),
-			'wc-settings-products-inventory' => array(
-				'title' => __( 'Inventory Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/lolkan4fxf.jsonp?time=2m38s&',
-			),
-			'wc-settings-products-downloadable' => array(
-				'title' => __( 'Downloadable Products Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/lolkan4fxf.jsonp?time=3m50s&',
+				'id'    => 'FEmwJsE8xDY',
 			),
 			'wc-settings-tax' => array(
 				'title' => __( 'Tax Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/qp1v19dwrh.jsonp?',
+				'id'    => '0aPtye5ba4A',
 			),
 			'wc-settings-tax-standard' => array(
 				'title' => __( 'Tax Rate Example', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/2p903vptwa.jsonp?',
+				'id'    => 'HC2IUnJSJro',
 			),
 			'wc-settings-tax-reduced-rate' => array(
 				'title' => __( 'Tax Rate Example', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/2p903vptwa.jsonp?',
+				'id'    => 'HC2IUnJSJro',
 			),
 			'wc-settings-tax-zero-rate' => array(
 				'title' => __( 'Tax Rate Example', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/2p903vptwa.jsonp?',
+				'id'    => 'HC2IUnJSJro',
 			),
 			'wc-settings-shipping' => array(
 				'title' => __( 'Shipping Zones', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/95yiocro6p.jsonp?',
+				'id'    => '1HhBEbIMqAQ',
 			),
 			'wc-settings-shipping-options' => array(
 				'title' => __( 'Shipping Options', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/9c9008dxnr.jsonp?',
+				'id'    => '468Z4s01e3M',
 			),
 			'wc-settings-shipping-classes' => array(
 				'title' => __( 'Shipping Classes', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/tpqg17aq99.jsonp?',
+				'id'    => 'Vyt5xIewlOs',
 			),
 			'wc-settings-checkout' => array(
 				'title' => __( 'Checkout Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/65yjv96z51.jsonp?',
+				'id'    => 'zoejwJfXops',
 			),
 			'wc-settings-checkout-bacs' => array(
 				'title' => __( 'Bank Transfer (BACS) Payment Method', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/dh4piy3sek.jsonp?',
+				'id'    => 'K4Lpaq9aS2Q',
 			),
 			'wc-settings-checkout-cheque' => array(
 				'title' => __( 'Check Payment Method', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/u2m2kcakea.jsonp?',
+				'id'    => 'LwxRxCkfofg',
 			),
 			'wc-settings-checkout-cod' => array(
 				'title' => __( 'Cash on Delivery (COD) Payment Method', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/8hyli8wu5f.jsonp?',
+				'id'    => 'aioOdPELH4M',
 			),
 			'wc-settings-checkout-paypal' => array(
 				'title' => __( 'PayPal Standard Method', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/rbl7e7l4k2.jsonp?',
+				'id'    => 'FwHT5UDdkdY',
 			),
 			'wc-settings-checkout-paypalbraintree_cards' => array(
 				'title' => __( 'PayPal by Braintree Payment Method', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/oyksirgn40.jsonp?',
+				'id'    => 'hubcUWq2NAc',
 			),
 			'wc-settings-checkout-stripe' => array(
 				'title' => __( 'Stripe Payment Method', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/mf975hx5de.jsonp?',
+				'id'    => '5rMDGdkmSGU',
 			),
 			'wc-settings-account' => array(
 				'title' => __( 'Account Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/35mazq7il2.jsonp?',
+				'id'    => 'AGZSeX5I-wo',
 			),
 			'wc-settings-email' => array(
 				'title' => __( 'Email Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/svcaftq4xv.jsonp?',
+				'id'    => '2vtzGc92tFU',
 			),
 			'wc-settings-api' => array(
 				'title' => __( 'API Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/1q0ny74vvq.jsonp?',
-			),
-			'wc-settings-api' => array(
-				'title' => __( 'API Settings', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/1q0ny74vvq.jsonp?',
-			),
-			'wc-settings-api-keys' => array(
-				'title' => __( 'Keys & Apps', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/1q0ny74vvq.jsonp?time=1m06s&',
-			),
-			'wc-settings-api-webhooks' => array(
-				'title' => __( 'Webhooks', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/1q0ny74vvq.jsonp?time=1m52s&',
+				'id'    => 'SjJUmgfLS4A',
 			),
 			'product' => array(
 				'title' => __( 'Creating Products', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/ziyjmd4kut.jsonp?',
+				'id'    => 'sFtXa00Jf_o',
 			),
 			'edit-product_cat' => array(
 				'title' => __( 'Product Categories', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/f0j5gzqigg.jsonp?time=21s&',
+				'id'    => 'PeFsOTrN1u8',
 			),
 			'edit-product_tag' => array(
 				'title' => __( 'Product Tags', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/f0j5gzqigg.jsonp??time=1m56s&',
+				'id'    => 'PeFsOTrN1u8',
 			),
 			'product_attributes' => array(
 				'title' => __( 'Product Attributes', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/f0j5gzqigg.jsonp??time=2m18s&',
+				'id'    => 'PeFsOTrN1u8',
 			),
 			'wc-status' => array(
 				'title' => __( 'System Status', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/xdn733nnhi.jsonp?',
-			),
-			'wc-status-tools' => array(
-				'title' => __( 'Tools', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/xdn733nnhi.jsonp?time=3m55s&',
+				'id'    => 'C8F6_sAr4CE',
 			),
 			'wc-reports' => array(
 				'title' => __( 'Reports', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/6aasex0w99.jsonp?',
-			),
-			'wc-reports-customers' => array(
-				'title' => __( 'Customer Reports', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/6aasex0w99.jsonp?time=2m07s&',
-			),
-			'wc-reports-stock' => array(
-				'title' => __( 'Stock Reports', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/6aasex0w99.jsonp?time=2m41s&',
-			),
-			'wc-reports-taxes' => array(
-				'title' => __( 'Tax Reports', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/6aasex0w99.jsonp?time=3m14s&',
+				'id'    => '69adRkRqOk0',
 			),
 			'edit-shop_coupon' => array(
 				'title' => __( 'Coupons', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/gupd4h8sit.jsonp?',
+				'id'    => 'k-GKjRs59UM',
 			),
 			'shop_coupon' => array(
 				'title' => __( 'Coupons', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/gupd4h8sit.jsonp?',
+				'id'    => 'k-GKjRs59UM',
 			),
 			'edit-shop_order' => array(
 				'title' => __( 'Managing Orders', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/n8n0sa8hee.jsonp?',
+				'id'    => 'rjS3mbiLN_c',
 			),
 			'shop_order' => array(
 				'title' => __( 'Managing Orders', 'woocommerce' ),
-				'url'   => '//fast.wistia.net/embed/iframe/n8n0sa8hee.jsonp?',
+				'id'    => 'rjS3mbiLN_c',
 			),
 		);
 
@@ -204,27 +166,23 @@ class WC_Admin_Help {
 		$section   = empty( $_REQUEST['section'] ) ? '' : sanitize_title( $_REQUEST['section'] );
 		$video_key = $page ? implode( '-', array_filter( array( $page, $tab, $section ) ) ) : $screen->id;
 
-		// Fallback for sections
+		// Fallback for sections.
 		if ( ! isset( $video_map[ $video_key ] ) ) {
 			$video_key = $page ? implode( '-', array_filter( array( $page, $tab ) ) ) : $screen->id;
 		}
 
-		// Fallback for tabs
+		// Fallback for tabs.
 		if ( ! isset( $video_map[ $video_key ] ) ) {
 			$video_key = $page ? $page : $screen->id;
 		}
 
 		if ( isset( $video_map[ $video_key ] ) ) {
+			$embed_code = str_replace( '?feature=oembed', '?feature=oembed&modestbranding=1&scolor=white', wp_oembed_get( 'https://www.youtube.com/watch?v=' . $video_map[ $video_key ]['id'], array( 'width' => '420px' ) ) );
+
 			$screen->add_help_tab( array(
-				'id'        => 'woocommerce_guided_tour_tab',
-				'title'     => __( 'Guided Tour', 'woocommerce' ),
-				'content'   =>
-					'<h2><a href="https://docs.woocommerce.com/document/woocommerce-guided-tour-videos/?utm_source=helptab&utm_medium=product&utm_content=videos&utm_campaign=woocommerceplugin">' . __( 'Guided Tour', 'woocommerce' ) . '</a> &ndash; ' . esc_html( $video_map[ $video_key ]['title'] ) . '</h2>' .
-					'<div class="wistia_responsive_padding" style="padding:56.25% 0 0 0;position:relative;">
-					<div class="wistia_responsive_wrapper" style="height:100%;left:0;position:absolute;top:0;width:100%;">
-					<iframe src="' . esc_url( $video_map[ $video_key ]['url'] ) . 'seo=false&videoFoam=true" title="Wistia video player" allowtransparency="true" frameborder="0" scrolling="no" class="wistia_embed" name="wistia_embed" allowfullscreen mozallowfullscreen webkitallowfullscreen oallowfullscreen msallowfullscreen width="100%" height="100%"></iframe>
-					</div></div>
-					<script src="//fast.wistia.net/assets/external/E-v1.js" async></script>',
+				'id'      => 'woocommerce_guided_tour_tab',
+				'title'   => __( 'Guided Tour', 'woocommerce' ),
+				'content' => '<h2><a href="https://docs.woocommerce.com/document/woocommerce-guided-tour-videos/?utm_source=helptab&utm_medium=product&utm_content=videos&utm_campaign=woocommerceplugin">' . __( 'Guided Tour', 'woocommerce' ) . '</a> &ndash; ' . esc_html( $video_map[ $video_key ]['title'] ) . '</h2>' . $embed_code,
 			) );
 		}
 
@@ -285,7 +243,5 @@ class WC_Admin_Help {
 		);
 	}
 }
-
-endif;
 
 return new WC_Admin_Help();

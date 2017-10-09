@@ -140,6 +140,7 @@ abstract class WC_Data {
 		$this->maybe_read_meta_data();
 		if ( ! empty( $this->meta_data ) ) {
 			foreach ( $this->meta_data as $array_key => $meta ) {
+				$this->meta_data[ $array_key ] = clone $meta;
 				if ( ! empty( $meta->id ) ) {
 					unset( $this->meta_data[ $array_key ]->id );
 				}
@@ -199,8 +200,8 @@ abstract class WC_Data {
 			} else {
 				$this->data_store->create( $this );
 			}
-			return $this->get_id();
 		}
+		return $this->get_id();
 	}
 
 	/**
@@ -247,6 +248,7 @@ abstract class WC_Data {
 	 * Filter null meta values from array.
 	 *
 	 * @since  3.0.0
+	 * @param mixed $meta Meta value to check.
 	 * @return bool
 	 */
 	protected function filter_null_meta( $meta ) {
@@ -257,11 +259,28 @@ abstract class WC_Data {
 	 * Get All Meta Data.
 	 *
 	 * @since 2.6.0
-	 * @return array
+	 * @return array of objects.
 	 */
 	public function get_meta_data() {
 		$this->maybe_read_meta_data();
 		return array_filter( $this->meta_data, array( $this, 'filter_null_meta' ) );
+	}
+
+	/**
+	 * Check if the key is an internal one.
+	 *
+	 * @since  3.2.0
+	 * @param  string $key
+	 * @return bool   true if it's an internal key, false otherwise
+	 */
+	protected function is_internal_meta_key( $key ) {
+		if ( $this->data_store && ! empty( $key ) && in_array( $key, $this->data_store->get_internal_meta_keys() ) ) {
+			wc_doing_it_wrong( __FUNCTION__, sprintf( __( 'Generic add/update/get meta methods should not be used for internal meta data, including "%s". Use getters and setters.', 'woocommerce' ), $key ), '3.2.0' );
+
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -274,15 +293,25 @@ abstract class WC_Data {
 	 * @return mixed
 	 */
 	public function get_meta( $key = '', $single = true, $context = 'view' ) {
+		if ( $this->is_internal_meta_key( $key ) ) {
+			$function = 'get_' . $key;
+
+			if ( is_callable( array( $this, $function ) ) ) {
+				return $this->{$function}();
+			}
+		}
+
 		$this->maybe_read_meta_data();
-		$array_keys = array_keys( wp_list_pluck( $this->get_meta_data(), 'key' ), $key );
+		$meta_data  = $this->get_meta_data();
+		$array_keys = array_keys( wp_list_pluck( $meta_data, 'key' ), $key );
 		$value      = $single ? '' : array();
 
 		if ( ! empty( $array_keys ) ) {
+			// We don't use the $this->meta_data property directly here because we don't want meta with a null value (i.e. meta which has been deleted via $this->delete_meta_data())
 			if ( $single ) {
-				$value = $this->meta_data[ current( $array_keys ) ]->value;
+				$value = $meta_data[ current( $array_keys ) ]->value;
 			} else {
-				$value = array_intersect_key( $this->meta_data, array_flip( $array_keys ) );
+				$value = array_intersect_key( $meta_data, array_flip( $array_keys ) );
 			}
 
 			if ( 'view' === $context ) {
@@ -318,11 +347,11 @@ abstract class WC_Data {
 			foreach ( $data as $meta ) {
 				$meta = (array) $meta;
 				if ( isset( $meta['key'], $meta['value'], $meta['id'] ) ) {
-					$this->meta_data[] = (object) array(
+					$this->meta_data[] = new WC_Meta_Data( array(
 						'id'    => $meta['id'],
 						'key'   => $meta['key'],
 						'value' => $meta['value'],
-					);
+					) );
 				}
 			}
 		}
@@ -337,32 +366,49 @@ abstract class WC_Data {
 	 * @param bool $unique Should this be a unique key?
 	 */
 	public function add_meta_data( $key, $value, $unique = false ) {
+		if ( $this->is_internal_meta_key( $key ) ) {
+			$function = 'set_' . $key;
+
+			if ( is_callable( array( $this, $function ) ) ) {
+				return $this->{$function}( $value );
+			}
+		}
+
 		$this->maybe_read_meta_data();
 		if ( $unique ) {
 			$this->delete_meta_data( $key );
 		}
-		$this->meta_data[] = (object) array(
+		$this->meta_data[] = new WC_Meta_Data( array(
 			'key'   => $key,
 			'value' => $value,
-		);
+		) );
 	}
 
 	/**
 	 * Update meta data by key or ID, if provided.
-	 *
 	 * @since  2.6.0
+	 *
 	 * @param  string $key
 	 * @param  string $value
 	 * @param  int $meta_id
 	 */
 	public function update_meta_data( $key, $value, $meta_id = '' ) {
+		if ( $this->is_internal_meta_key( $key ) ) {
+			$function = 'set_' . $key;
+
+			if ( is_callable( array( $this, $function ) ) ) {
+				return $this->{$function}( $value );
+			}
+		}
+
 		$this->maybe_read_meta_data();
-		if ( $array_key = $meta_id ? array_keys( wp_list_pluck( $this->meta_data, 'id' ), $meta_id ) : '' ) {
-			$this->meta_data[ current( $array_key ) ] = (object) array(
-				'id'    => $meta_id,
-				'key'   => $key,
-				'value' => $value,
-			);
+
+		$array_key = $meta_id ? array_keys( wp_list_pluck( $this->meta_data, 'id' ), $meta_id ) : '';
+
+		if ( $array_key ) {
+			$meta = $this->meta_data[ current( $array_key ) ];
+			$meta->key = $key;
+			$meta->value = $value;
 		} else {
 			$this->add_meta_data( $key, $value, true );
 		}
@@ -372,11 +418,13 @@ abstract class WC_Data {
 	 * Delete meta data.
 	 *
 	 * @since 2.6.0
-	 * @param array $key Meta key
+	 * @param string $key Meta key
 	 */
 	public function delete_meta_data( $key ) {
 		$this->maybe_read_meta_data();
-		if ( $array_keys = array_keys( wp_list_pluck( $this->meta_data, 'key' ), $key ) ) {
+		$array_keys = array_keys( wp_list_pluck( $this->meta_data, 'key' ), $key );
+
+		if ( $array_keys ) {
 			foreach ( $array_keys as $array_key ) {
 				$this->meta_data[ $array_key ]->value = null;
 			}
@@ -391,7 +439,9 @@ abstract class WC_Data {
 	 */
 	public function delete_meta_data_by_mid( $mid ) {
 		$this->maybe_read_meta_data();
-		if ( $array_keys = array_keys( wp_list_pluck( $this->meta_data, 'id' ), $mid ) ) {
+		$array_keys = array_keys( wp_list_pluck( $this->meta_data, 'id' ), $mid );
+
+		if ( $array_keys ) {
 			foreach ( $array_keys as $array_key ) {
 				$this->meta_data[ $array_key ]->value = null;
 			}
@@ -429,33 +479,29 @@ abstract class WC_Data {
 		}
 
 		if ( ! empty( $this->cache_group ) ) {
-			$cache_key = WC_Cache_Helper::get_cache_prefix( $this->cache_group ) . 'object_meta_' . $this->get_id();
+			// Prefix by group allows invalidation by group until https://core.trac.wordpress.org/ticket/4476 is implemented.
+			$cache_key = WC_Cache_Helper::get_cache_prefix( $this->cache_group ) . WC_Cache_Helper::get_cache_prefix( 'object_' . $this->get_id() ) . 'object_meta_' . $this->get_id();
 		}
 
 		if ( ! $force_read ) {
 			if ( ! empty( $this->cache_group ) ) {
-				$cached_meta = wp_cache_get( $cache_key, $this->cache_group );
-				if ( false !== $cached_meta ) {
-					$this->meta_data = $cached_meta;
-					$cache_loaded    = true;
-				}
+				$cached_meta  = wp_cache_get( $cache_key, $this->cache_group );
+				$cache_loaded = ! empty( $cached_meta );
 			}
 		}
 
-		if ( ! $cache_loaded ) {
-			$raw_meta_data   = $this->data_store->read_meta( $this );
-			if ( $raw_meta_data ) {
-				foreach ( $raw_meta_data as $meta ) {
-					$this->meta_data[] = (object) array(
-						'id'    => (int) $meta->meta_id,
-						'key'   => $meta->meta_key,
-						'value' => maybe_unserialize( $meta->meta_value ),
-					);
-				}
+		$raw_meta_data = $cache_loaded ? $cached_meta : $this->data_store->read_meta( $this );
+		if ( $raw_meta_data ) {
+			foreach ( $raw_meta_data as $meta ) {
+				$this->meta_data[] = new WC_Meta_Data( array(
+					'id'    => (int) $meta->meta_id,
+					'key'   => $meta->meta_key,
+					'value' => maybe_unserialize( $meta->meta_value ),
+				) );
+			}
 
-				if ( ! empty( $this->cache_group ) ) {
-					wp_cache_set( $cache_key, $this->meta_data, $this->cache_group );
-				}
+			if ( ! $cache_loaded && ! empty( $this->cache_group ) ) {
+				wp_cache_set( $cache_key, $raw_meta_data, $this->cache_group );
 			}
 		}
 	}
@@ -476,15 +522,18 @@ abstract class WC_Data {
 					unset( $this->meta_data[ $array_key ] );
 				}
 			} elseif ( empty( $meta->id ) ) {
-				$new_meta_id                       = $this->data_store->add_meta( $this, $meta );
-				$this->meta_data[ $array_key ]->id = $new_meta_id;
+				$meta->id = $this->data_store->add_meta( $this, $meta );
+				$meta->apply_changes();
 			} else {
-				$this->data_store->update_meta( $this, $meta );
+				if ( $meta->get_changes() ) {
+					$this->data_store->update_meta( $this, $meta );
+					$meta->apply_changes();
+				}
 			}
 		}
-
 		if ( ! empty( $this->cache_group ) ) {
-			WC_Cache_Helper::incr_cache_prefix( $this->cache_group );
+			$cache_key = WC_Cache_Helper::get_cache_prefix( $this->cache_group ) . WC_Cache_Helper::get_cache_prefix( 'object_' . $this->get_id() ) . 'object_meta_' . $this->get_id();
+			wp_cache_delete( $cache_key, $this->cache_group );
 		}
 	}
 
@@ -507,7 +556,7 @@ abstract class WC_Data {
 		$this->data        = $this->default_data;
 		$this->changes     = array();
 		$this->set_object_read( false );
- 	}
+	}
 
 	/**
 	 * Set object read property.
@@ -534,8 +583,11 @@ abstract class WC_Data {
 	 * Only sets using public methods.
 	 *
 	 * @since  3.0.0
+	 *
 	 * @param  array $props Key value pairs to set. Key is the prop and should map to a setter function name.
-	 * @return WP_Error|bool
+	 * @param string $context
+	 *
+	 * @return bool|WP_Error
 	 */
 	public function set_props( $props, $context = 'set' ) {
 		$errors = new WP_Error();
@@ -639,7 +691,7 @@ abstract class WC_Data {
 	}
 
 	/**
-	 * Sets a date prop whilst handling formatting and datatime objects.
+	 * Sets a date prop whilst handling formatting and datetime objects.
 	 *
 	 * @since 3.0.0
 	 * @param string $prop Name of prop to set.

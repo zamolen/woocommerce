@@ -39,7 +39,7 @@ class Products_API extends WC_REST_Unit_Test_Case {
 	public function test_get_products() {
 		wp_set_current_user( $this->user );
 		WC_Helper_Product::create_external_product();
-		sleep( 1 ); // So both proudcts have different timestamps.
+		sleep( 1 ); // So both products have different timestamps.
 		WC_Helper_Product::create_simple_product();
 		$response = $this->server->dispatch( new WP_REST_Request( 'GET', '/wc/v2/products' ) );
 		$products = $response->get_data();
@@ -300,7 +300,7 @@ class Products_API extends WC_REST_Unit_Test_Case {
 			'sku'            => 'DUMMY SKU EXTERNAL API',
 			'regular_price'  => '10',
 			'button_text'    => 'Test Button',
-			'external_url'   => 'http://wordpress.org',
+			'external_url'   => 'https://wordpress.org',
 		) );
 		$response = $this->server->dispatch( $request );
 		$data     = $response->get_data();
@@ -312,7 +312,7 @@ class Products_API extends WC_REST_Unit_Test_Case {
 		$this->assertEquals( 'Test External Product', $data['name'] );
 		$this->assertEquals( 'external', $data['type'] );
 		$this->assertEquals( 'Test Button', $data['button_text'] );
-		$this->assertEquals( 'http://wordpress.org', $data['external_url'] );
+		$this->assertEquals( 'https://wordpress.org', $data['external_url'] );
 
 		// Create variable
 		$request = new WP_REST_Request( 'POST', '/wc/v2/products' );

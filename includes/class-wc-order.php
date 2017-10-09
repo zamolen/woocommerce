@@ -218,10 +218,13 @@ class WC_Order extends WC_Abstract_Order {
 	/**
 	 * Set order status.
 	 * @since 3.0.0
+	 *
 	 * @param string $new_status Status to change the order to. No internal wc- prefix is required.
 	 * @param string $note (default: '') Optional note to add.
 	 * @param bool $manual_update is this a manual order status change?
 	 * @param array details of change
+	 *
+	 * @return array
 	 */
 	public function set_status( $new_status, $note = '', $manual_update = false ) {
 		$result = parent::set_status( $new_status );
@@ -255,8 +258,8 @@ class WC_Order extends WC_Abstract_Order {
 	 * @since 3.0.0
 	 */
 	public function maybe_set_date_paid() {
-		if ( ! $this->get_date_paid( 'edit' ) && $this->has_status( apply_filters( 'woocommerce_payment_complete_order_status', $this->needs_processing() ? 'processing' : 'completed', $this->get_id() ) ) ) {
-			$this->set_date_paid( current_time( 'timestamp' ) );
+		if ( ! $this->get_date_paid( 'edit' ) && $this->has_status( apply_filters( 'woocommerce_payment_complete_order_status', $this->needs_processing() ? 'processing' : 'completed', $this->get_id(), $this ) ) ) {
+			$this->set_date_paid( current_time( 'timestamp', true ) );
 		}
 	}
 
@@ -276,6 +279,11 @@ class WC_Order extends WC_Abstract_Order {
 	/**
 	 * Updates status of order immediately. Order must exist.
 	 * @uses WC_Order::set_status()
+	 *
+	 * @param string $new_status
+	 * @param string $note
+	 * @param bool $manual
+	 *
 	 * @return bool success
 	 */
 	public function update_status( $new_status, $note = '', $manual = false ) {
@@ -295,25 +303,27 @@ class WC_Order extends WC_Abstract_Order {
 	 * Handle the status transition.
 	 */
 	protected function status_transition() {
-		if ( $this->status_transition ) {
-			do_action( 'woocommerce_order_status_' . $this->status_transition['to'], $this->get_id(), $this );
+		$status_transition = $this->status_transition;
 
-			if ( ! empty( $this->status_transition['from'] ) ) {
+		// Reset status transition variable
+		$this->status_transition = false;
+
+		if ( $status_transition ) {
+			do_action( 'woocommerce_order_status_' . $status_transition['to'], $this->get_id(), $this );
+
+			if ( ! empty( $status_transition['from'] ) ) {
 				/* translators: 1: old order status 2: new order status */
-				$transition_note = sprintf( __( 'Order status changed from %1$s to %2$s.', 'woocommerce' ), wc_get_order_status_name( $this->status_transition['from'] ), wc_get_order_status_name( $this->status_transition['to'] ) );
+				$transition_note = sprintf( __( 'Order status changed from %1$s to %2$s.', 'woocommerce' ), wc_get_order_status_name( $status_transition['from'] ), wc_get_order_status_name( $status_transition['to'] ) );
 
-				do_action( 'woocommerce_order_status_' . $this->status_transition['from'] . '_to_' . $this->status_transition['to'], $this->get_id(), $this );
-				do_action( 'woocommerce_order_status_changed', $this->get_id(), $this->status_transition['from'], $this->status_transition['to'], $this );
+				do_action( 'woocommerce_order_status_' . $status_transition['from'] . '_to_' . $status_transition['to'], $this->get_id(), $this );
+				do_action( 'woocommerce_order_status_changed', $this->get_id(), $status_transition['from'], $status_transition['to'], $this );
 			} else {
 				/* translators: %s: new order status */
-				$transition_note = sprintf( __( 'Order status set to %s.', 'woocommerce' ), wc_get_order_status_name( $this->status_transition['to'] ) );
+				$transition_note = sprintf( __( 'Order status set to %s.', 'woocommerce' ), wc_get_order_status_name( $status_transition['to'] ) );
 			}
 
 			// Note the transition occurred
-			$this->add_order_note( trim( $this->status_transition['note'] . ' ' . $transition_note ), 0, $this->status_transition['manual'] );
-
-			// This has ran, so reset status transition variable
-			$this->status_transition = false;
+			$this->add_order_note( trim( $status_transition['note'] . ' ' . $transition_note ), 0, $status_transition['manual'] );
 		}
 	}
 
@@ -730,7 +740,7 @@ class WC_Order extends WC_Abstract_Order {
 	public function get_date_paid( $context = 'view' ) {
 		$date_paid = $this->get_prop( 'date_paid', $context );
 
-		if ( 'view' === $context && ! $date_paid && version_compare( $this->get_version( 'edit' ), '3.0', '<' ) && $this->has_status( apply_filters( 'woocommerce_payment_complete_order_status', $this->needs_processing() ? 'processing' : 'completed', $this->get_id() ) ) ) {
+		if ( 'view' === $context && ! $date_paid && version_compare( $this->get_version( 'edit' ), '3.0', '<' ) && $this->has_status( apply_filters( 'woocommerce_payment_complete_order_status', $this->needs_processing() ? 'processing' : 'completed', $this->get_id(), $this ) ) ) {
 			// In view context, return a date if missing.
 			$date_paid = $this->get_date_created( 'edit' );
 		}
@@ -765,7 +775,13 @@ class WC_Order extends WC_Abstract_Order {
 	 * @return string
 	 */
 	public function get_shipping_address_map_url() {
-		$address = apply_filters( 'woocommerce_shipping_address_map_url_parts', $this->get_address( 'shipping' ), $this );
+		$address = $this->get_address( 'shipping' );
+
+		// Remove name and company before generate the Google Maps URL.
+		unset( $address['first_name'], $address['last_name'], $address['company'] );
+
+		$address = apply_filters( 'woocommerce_shipping_address_map_url_parts', $address, $this );
+
 		return apply_filters( 'woocommerce_shipping_address_map_url', 'https://maps.google.com/maps?&q=' . urlencode( implode( ', ', $address ) ) . '&z=16', $this );
 	}
 
@@ -804,11 +820,21 @@ class WC_Order extends WC_Abstract_Order {
 	 * @return string
 	 */
 	public function get_formatted_shipping_address() {
-		if ( $this->get_shipping_address_1() || $this->get_shipping_address_2() ) {
+		if ( $this->has_shipping_address() ) {
 			return WC()->countries->get_formatted_address( apply_filters( 'woocommerce_order_formatted_shipping_address', $this->get_address( 'shipping' ), $this ) );
 		} else {
 			return '';
 		}
+	}
+
+	/**
+	 * Returns true if the order has a shipping address.
+	 *
+	 * @since  3.0.4
+	 * @return boolean
+	 */
+	public function has_shipping_address() {
+		return $this->get_shipping_address_1() || $this->get_shipping_address_2();
 	}
 
 	/*
@@ -1208,6 +1234,9 @@ class WC_Order extends WC_Abstract_Order {
 
 	/**
 	 * See if order matches cart_hash.
+	 *
+	 * @param string $cart_hash
+	 *
 	 * @return bool
 	 */
 	public function has_cart_hash( $cart_hash = '' ) {
@@ -1271,12 +1300,43 @@ class WC_Order extends WC_Abstract_Order {
 	 */
 	public function has_downloadable_item() {
 		foreach ( $this->get_items() as $item ) {
-			if ( $item->is_type( 'line_item' ) && ( $product = $item->get_product() ) && $product->is_downloadable() && $product->has_file() ) {
+			if ( $item->is_type( 'line_item' ) && ( $product = $item->get_product() ) && $product->has_file() ) {
 				return true;
 			}
 		}
 		return false;
 	}
+
+	/**
+	 * Get downloads from all line items for this order.
+	 *
+	 * @since  3.2.0
+	 * @return array
+	 */
+	public function get_downloadable_items() {
+		$downloads = array();
+
+		foreach ( $this->get_items() as $item ) {
+			if ( is_object( $item ) && $item->is_type( 'line_item' ) && ( $item_downloads = $item->get_item_downloads() ) ) {
+				if ( $product = $item->get_product() ) {
+					foreach ( $item_downloads as $file ) {
+						$downloads[] = array(
+							'download_url'        => $file['download_url'],
+							'download_id'         => $file['id'],
+							'product_id'          => $product->get_id(),
+							'product_name'        => $product->get_name(),
+							'download_name'       => $file['name'],
+							'order_id'            => $this->get_id(),
+							'order_key'           => $this->get_order_key(),
+							'downloads_remaining' => $file['downloads_remaining'],
+							'access_expires'      => $file['access_expires'],
+						);
+					}
+				}
+			}
+		}
+		return $downloads;
+ 	}
 
 	/**
 	 * Checks if an order needs payment, based on status and order total.
@@ -1691,7 +1751,7 @@ class WC_Order extends WC_Abstract_Order {
 				$refunded_item_id = (int) $refunded_item->get_meta( '_refunded_item_id' );
 				if ( $refunded_item_id === $item_id ) {
 					$taxes = $refunded_item->get_taxes();
-					$total += isset( $taxes['total'][ $tax_id ] ) ? $taxes['total'][ $tax_id ] : 0;
+					$total += isset( $taxes['total'][ $tax_id ] ) ? (float) $taxes['total'][ $tax_id ] : 0;
 					break;
 				}
 			}

@@ -274,6 +274,29 @@ class WC_Tests_CRUD_Orders extends WC_Unit_Test_Case {
 	}
 
 	/**
+	 * Test: get_different_items
+	 */
+	function test_get_different_items() {
+		$object  = new WC_Order();
+		$item_1  = new WC_Order_Item_Product();
+		$item_1->set_props( array(
+			'product'  => WC_Helper_Product::create_simple_product(),
+			'quantity' => 4,
+		) );
+		$item_2  = new WC_Order_Item_Fee();
+		$item_2->set_props( array(
+			'name'       => 'Some Fee',
+			'tax_status' => 'taxable',
+			'total'      => '100',
+			'tax_class'  => '',
+		) );
+		$object->add_item( $item_1 );
+		$object->add_item( $item_2 );
+		// $object->save();
+		$this->assertCount( 2, $object->get_items( array( 'line_item', 'fee' ) ) );
+	}
+
+	/**
 	 * Test: get_fees
 	 */
 	function test_get_fees() {
@@ -577,6 +600,51 @@ class WC_Tests_CRUD_Orders extends WC_Unit_Test_Case {
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}woocommerce_tax_rates" );
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}woocommerce_tax_rate_locations" );
 		update_option( 'woocommerce_calc_taxes', 'no' );
+	}
+
+	function test_calculate_taxes_issue_with_addresses() {
+		global $wpdb;
+		update_option( 'woocommerce_calc_taxes', 'yes' );
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}woocommerce_tax_rates" );
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}woocommerce_tax_rate_locations" );
+
+		$taxes = array();
+
+		$taxes[] = WC_Tax::_insert_tax_rate( array(
+			'tax_rate_country'  => 'US',
+			'tax_rate_state'    => '',
+			'tax_rate'          => '20.0000',
+			'tax_rate_name'     => 'TAX',
+			'tax_rate_priority' => '1',
+			'tax_rate_compound' => '0',
+			'tax_rate_shipping' => '1',
+			'tax_rate_order'    => '1',
+			'tax_rate_class'    => '',
+		) );
+		$taxes[] = WC_Tax::_insert_tax_rate( array(
+			'tax_rate_country'  => 'PY',
+			'tax_rate_state'    => '',
+			'tax_rate'          => '10.0000',
+			'tax_rate_name'     => 'TAX',
+			'tax_rate_priority' => '1',
+			'tax_rate_compound' => '0',
+			'tax_rate_shipping' => '1',
+			'tax_rate_order'    => '1',
+			'tax_rate_class'    => '',
+		) );
+
+		update_option( 'woocommerce_default_country', 'PY:Central' );
+		update_option( 'woocommerce_tax_based_on', 'shipping' );
+
+		$order = new WC_Order;
+		$order->set_billing_country( 'US' );
+		$order->set_billing_state( 'CA' );
+		$order->add_product( WC_Helper_Product::create_simple_product(), 4 );
+		$order->calculate_taxes();
+
+		$tax = $order->get_taxes();
+		$this->assertEquals( 1, count( $tax ) );
+		$this->assertEquals( 'US-TAX-1', current( $tax )->get_name() );
 	}
 
 	/**
@@ -1159,7 +1227,7 @@ class WC_Tests_CRUD_Orders extends WC_Unit_Test_Case {
 		$object->set_shipping_state( 'Boulder' );
 		$object->set_shipping_postcode( '00001' );
 		$object->set_shipping_country( 'US' );
-		$this->assertEquals( 'https://maps.google.com/maps?&q=Barney%2C+Rubble%2C+Bedrock+Ltd.%2C+34+Stonepants+avenue%2C+Rockville%2C+Bedrock%2C+Boulder%2C+00001%2C+US&z=16', $object->get_shipping_address_map_url() );
+		$this->assertEquals( 'https://maps.google.com/maps?&q=34+Stonepants+avenue%2C+Rockville%2C+Bedrock%2C+Boulder%2C+00001%2C+US&z=16', $object->get_shipping_address_map_url() );
 	}
 
 	/**
@@ -1495,5 +1563,51 @@ class WC_Tests_CRUD_Orders extends WC_Unit_Test_Case {
 	function test_get_remaining_refund_items() {
 		$object = WC_Helper_Order::create_order();
 		$this->assertEquals( 4, $object->get_remaining_refund_items() );
+	}
+
+	/**
+	 * Test apply_coupon and remove_coupon with a fixed discount coupon.
+	 * @since 3.2.0
+	 */
+	function test_add_remove_coupon_fixed() {
+		$order = WC_Helper_Order::create_order();
+
+		$coupon = new WC_Coupon;
+		$coupon->set_code( 'test' );
+		$coupon->set_discount_type( 'fixed_cart' );
+		$coupon->set_amount( 10 );
+		$coupon->save();
+
+		$order->apply_coupon( 'test' );
+		$this->assertEquals( 40, $order->get_total() );
+
+		$order->remove_coupon( 'test' );
+		$this->assertEquals( 50, $order->get_total() );
+
+		$coupon->delete( true );
+		$order->delete( true );
+	}
+
+	/**
+	 * Test apply_coupon and remove_coupon with a percent discount coupon.
+	 * @since 3.2.0
+	 */
+	function test_add_remove_coupon_percent() {
+		$order = WC_Helper_Order::create_order();
+
+		$coupon = new WC_Coupon;
+		$coupon->set_code( 'test' );
+		$coupon->set_discount_type( 'percent' );
+		$coupon->set_amount( 50 );
+		$coupon->save();
+
+		$order->apply_coupon( 'test' );
+		$this->assertEquals( 30, $order->get_total() );
+
+		$order->remove_coupon( 'test' );
+		$this->assertEquals( 50, $order->get_total() );
+
+		$coupon->delete( true );
+		$order->delete( true );
 	}
 }
