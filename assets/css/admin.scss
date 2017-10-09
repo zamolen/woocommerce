@@ -28,8 +28,8 @@
 		}
 		.woocommerce-edit-product-images-wrapper {
 			float: left;
-			width: 258px;
-			margin-right: 20px;
+			width: 262px;
+			margin-right: 16px;
 			margin-bottom: 17px;
 
 			ul.product_images {
@@ -54,6 +54,16 @@
 					@include border-radius(2px);
 					position: relative;
 					box-sizing: border-box;
+
+					&:first-child {
+						width: 258px !important;
+						height: 258px !important;
+						margin-right: 0;
+					}
+
+					img {
+						cursor: move;
+					}
 				}
 
 				li.add_product_images {
@@ -81,25 +91,20 @@
 					}
 				}
 
-				li:first-child {
-					width: 254px;
-					height: 254px;
-					margin-right: 0;
-				}
-
-				li:nth-child(3n+1) {
-					margin-right: 0;
-				}
-
 				li.wc-metabox-sortable-placeholder {
-					border: 3px dashed #dddddd;
+					border: 2px dashed #dddddd;
 					position: relative;
 
 					&::after {
 						@include icon_dashicons( '\f161' );
 						font-size: 2.618em;
-						line-height: 72px;
+						line-height: 80px;
 						color: #ddd;
+					}
+					&:first-child {
+						&::after {
+							line-height: 258px !important;
+						}
 					}
 				}
 
