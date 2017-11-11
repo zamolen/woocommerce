@@ -90,6 +90,11 @@ class WC_Admin_Setup_Wizard {
 			return;
 		}
 		$default_steps = array(
+			'adventure' => array(
+				'name'    => __( 'Store setup - choose your own adventure', 'woocommerce' ),
+				'view'    => array( $this, 'wc_setup_store_adventure' ),
+				'handler' => '',
+			),
 			'store_setup' => array(
 				'name'    => __( 'Store setup', 'woocommerce' ),
 				'view'    => array( $this, 'wc_setup_store_setup' ),
@@ -121,6 +126,11 @@ class WC_Admin_Setup_Wizard {
 				'handler' => '',
 			),
 		);
+
+		// Hide adventure step if we're already past it
+		if ( isset( $_GET['step'] ) ) {
+			unset( $default_steps['adventure'] );
+		}
 
 		// Hide the extras step if this store/user isn't eligible for them.
 		if ( ! $this->should_show_theme_extra() && ! $this->should_show_automated_tax_extra() ) {
@@ -243,7 +253,7 @@ class WC_Admin_Setup_Wizard {
 				<a class="wc-return-to-dashboard" href="<?php echo esc_url( admin_url() ); ?>"><?php esc_html_e( 'Not right now', 'woocommerce' ); ?></a>
 			<?php elseif ( 'next_steps' === $this->step ) : ?>
 				<a class="wc-return-to-dashboard" href="<?php echo esc_url( admin_url() ); ?>"><?php esc_html_e( 'Return to your dashboard', 'woocommerce' ); ?></a>
-			<?php elseif ( 'activate' === $this->step ) : ?>
+			<?php elseif ( 'activate' === $this->step || 'adventure' === $this->step ) : ?>
 				<a class="wc-return-to-dashboard" href="<?php echo esc_url( $this->get_next_step_link() ); ?>"><?php esc_html_e( 'Skip this step', 'woocommerce' ); ?></a>
 			<?php endif; ?>
 			</body>
@@ -280,6 +290,31 @@ class WC_Admin_Setup_Wizard {
 			call_user_func( $this->steps[ $this->step ]['view'], $this );
 		}
 		echo '</div>';
+	}
+
+	public function wc_setup_store_adventure() {
+		?>
+		<p class="wc-setup-actions step">
+		<?php if ( ! class_exists( 'Jetpack' ) ) : ?>
+			Jetpack is either not installed or not activated.
+		<?php else :
+			$jetpack_redirect_url   = site_url( add_query_arg( array(
+				'from'           => 'wpcom',
+				'activate_error' => false,
+			) ) );
+			$connection_url = Jetpack::init()->build_connect_url( true, $redirect_url, 'woocommerce-setup-wizard' );
+			error_log(print_r('$connection_url', true));
+			error_log(print_r($connection_url, true));
+		?>
+			<a
+				href="<?php echo esc_url( $connection_url ); ?>"
+				class="button-primary button button-large"
+				/>
+				Let me try the beta! (Store on .com version)
+			</a>
+		<?php endif; ?>
+		</p>
+		<?php
 	}
 
 	/**
