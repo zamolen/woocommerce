@@ -1428,8 +1428,69 @@ class WC_Tests_Discounts extends WC_Unit_Test_Case {
 		$product->delete( true );
 		$product2->delete( true );
 		$coupon->delete( true );
+	}
 
-		// Temporarily necessary until https://github.com/woocommerce/woocommerce/pull/16767 is implemented.
-		wp_cache_delete( WC_Cache_Helper::get_cache_prefix( 'coupons' ) . 'coupon_id_from_code_test', 'coupons' );
+	public function filter_woocommerce_coupon_get_discount_amount2( $discount, $discounting_amount, $cart_item, $single, $coupon ) {
+		$discount_percent = ( wc_get_price_excluding_tax( $cart_item['data'] ) * $cart_item['quantity'] ) / WC()->cart->subtotal_ex_tax;
+
+		// $100 coupon
+		$discount = ( 100 * $discount_percent ) / $cart_item['quantity'];
+
+		return round( min( $discount, $discounting_amount ), wc_get_rounding_precision() );
+	}
+
+	public function test_coupon_discount_amount_filter2() {
+		$discounts = new WC_Discounts();
+
+		add_filter( 'woocommerce_coupon_get_discount_amount', array( $this, 'filter_woocommerce_coupon_get_discount_amount2' ), 10, 5 );
+
+		$product = WC_Helper_Product::create_simple_product();
+		$product->set_regular_price( 40 );
+		$product->set_tax_status( 'none' );
+		$product->save();
+		WC()->cart->add_to_cart( $product->get_id(), 1 );
+
+		$product2 = WC_Helper_Product::create_simple_product();
+		$product2->set_regular_price( 240 );
+		$product2->set_tax_status( 'none' );
+		$product2->save();
+		WC()->cart->add_to_cart( $product2->get_id(), 1 );
+
+		$product3 = WC_Helper_Product::create_simple_product();
+		$product3->set_regular_price( 400 );
+		$product3->set_tax_status( 'none' );
+		$product3->save();
+		WC()->cart->add_to_cart( $product3->get_id(), 1 );
+
+		$coupon = WC_Helper_Coupon::create_coupon( 'test' );
+		$coupon->set_props( array(
+			'code'                   => 'test',
+			'discount_type'          => 'fixed_cart',
+			'amount'                 => '100',
+		) );
+
+		$discounts->set_items_from_cart( WC()->cart );
+		$discounts->apply_coupon( $coupon );
+
+		$all_discounts = $discounts->get_discounts();
+
+		$discount_total = 0;
+		foreach ( $all_discounts as $code_name => $discounts_by_coupon ) {
+			$discount_total += array_sum( $discounts_by_coupon );
+		}
+
+		$this->assertEquals( 100, $discount_total );
+
+		WC()->cart->add_discount( $coupon->get_code() );
+		WC()->cart->calculate_totals();
+		$this->assertEquals( 580.00, WC()->cart->get_total( 'total', true ) );
+
+		remove_filter( 'woocommerce_coupon_get_discount_amount', array( $this, 'filter_woocommerce_coupon_get_discount_amount2' ), 10, 5 );
+		WC()->cart->empty_cart();
+		WC()->cart->remove_coupons();
+		$product->delete( true );
+		$product2->delete( true );
+		$product3->delete( true );
+		$coupon->delete( true );
 	}
 }
