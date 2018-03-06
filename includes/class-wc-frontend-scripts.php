@@ -501,6 +501,7 @@ class WC_Frontend_Scripts {
 					'locale'             => json_encode( WC()->countries->get_country_locale() ),
 					'locale_fields'      => json_encode( WC()->countries->get_country_locale_field_selectors() ),
 					'i18n_required_text' => esc_attr__( 'required', 'woocommerce' ),
+					'i18n_optional_text' => esc_html__( 'optional', 'woocommerce' ),
 				);
 			break;
 			case 'wc-cart' :

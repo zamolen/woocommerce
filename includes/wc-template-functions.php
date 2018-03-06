@@ -2120,7 +2120,7 @@ if ( ! function_exists( 'woocommerce_form_field' ) ) {
 			$args['class'][] = 'validate-required';
 			$required        = ' <abbr class="required" title="' . esc_attr__( 'required', 'woocommerce' ) . '">*</abbr>';
 		} else {
-			$required = '';
+			$required        = ' <span class="optional">(' . esc_html__( 'optional', 'woocommerce' ) . ')</span>';
 		}
 
 		if ( is_string( $args['label_class'] ) ) {
@@ -2284,11 +2284,13 @@ if ( ! function_exists( 'woocommerce_form_field' ) ) {
 				$field_html .= '<label for="' . esc_attr( $label_id ) . '" class="' . esc_attr( implode( ' ', $args['label_class'] ) ) . '">' . $args['label'] . $required . '</label>';
 			}
 
-			$field_html .= $field;
+			$field_html .= '<span class="woocommerce-input-wrapper">' . $field;
 
 			if ( $args['description'] ) {
-				$field_html .= '<span class="description">' . esc_html( $args['description'] ) . '</span>';
+				$field_html .= '<span class="description" data-title="' . esc_attr( $args['description'] ) . '"><span>' . esc_html( $args['description'] ) . '</span></span>';
 			}
+
+			$field_html .= '</span>';
 
 			$container_class = esc_attr( implode( ' ', $args['class'] ) );
 			$container_id    = esc_attr( $args['id'] ) . '_field';
