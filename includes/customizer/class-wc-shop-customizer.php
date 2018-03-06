@@ -39,6 +39,7 @@ class WC_Shop_Customizer {
 		$this->add_store_notice_section( $wp_customize );
 		$this->add_product_catalog_section( $wp_customize );
 		$this->add_product_images_section( $wp_customize );
+		$this->add_checkout_section( $wp_customize );
 	}
 
 	/**
@@ -165,6 +166,14 @@ class WC_Shop_Customizer {
 					section.expanded.bind( function( isExpanded ) {
 						if ( isExpanded ) {
 							wp.customize.previewer.previewUrl.set( '<?php echo esc_js( wc_get_page_permalink( 'shop' ) ); ?>' );
+						}
+					} );
+				} );
+
+				wp.customize.section( 'woocommerce_checkout', function( section ) {
+					section.expanded.bind( function( isExpanded ) {
+						if ( isExpanded ) {
+							wp.customize.previewer.previewUrl.set( '<?php echo esc_js( wc_get_page_permalink( 'checkout' ) ); ?>' );
 						}
 					} );
 				} );
@@ -645,6 +654,94 @@ class WC_Shop_Customizer {
 				)
 			)
 		);
+	}
+
+	/**
+	 * Sanitize field display.
+	 *
+	 * @param string $value '', 'subcategories', or 'both'.
+	 * @return string
+	 */
+	public function sanitize_checkout_field_display( $value ) {
+		$options = array( 'hidden', 'optional', 'required' );
+
+		return in_array( $value, $options, true ) ? $value : '';
+	}
+
+	/**
+	 * Checkout section.
+	 *
+	 * @param WP_Customize_Manager $wp_customize Theme Customizer object.
+	 */
+	public function add_checkout_section( $wp_customize ) {
+		$wp_customize->add_section(
+			'woocommerce_checkout',
+			array(
+				'title'       => __( 'Checkout Form Options', 'woocommerce' ),
+				'priority'    => 20,
+				'panel'       => 'woocommerce',
+				'description' => __( 'Choose whether your checkout form needs to collect certain information.', 'woocommerce' ),
+			)
+		);
+
+		$wp_customize->add_setting(
+			'woocommerce_checkout_label_required_fields',
+			array(
+				'default'           => 'yes',
+				'type'              => 'option',
+				'capability'        => 'manage_woocommerce',
+			)
+		);
+
+		$wp_customize->add_control(
+			'woocommerce_checkout_label_required_fields',
+			array(
+				'label'       => __( 'Label required fields', 'woocommerce' ),
+				'description' => __( 'Choose if required or optional fields should be labeled.', 'woocommerce' ),
+				'section'     => 'woocommerce_checkout',
+				'settings'    => 'woocommerce_checkout_label_required_fields',
+				'type'        => 'radio',
+				'choices'     => array(
+					'yes' => __( 'Label required fields', 'woocommerce' ),
+					'no'  => __( 'Label optional fields', 'woocommerce' ),
+				),
+			)
+		);
+
+		$fields = array(
+			'company'   => __( 'Company name', 'woocommerce' ),
+			'address_2' => __( 'Address line 2', 'woocommerce' ),
+			'phone'     => __( 'Phone', 'woocommerce' ),
+		);
+
+		foreach ( $fields as $field => $label ) {
+			$wp_customize->add_setting(
+				'woocommerce_checkout_' . $field . '_field',
+				array(
+					'default'           => 'optional',
+					'type'              => 'option',
+					'capability'        => 'manage_woocommerce',
+					'sanitize_callback' => array( $this, 'sanitize_checkout_field_display' ),
+				)
+			);
+
+			$wp_customize->add_control(
+				'woocommerce_checkout_' . $field . '_field',
+				array(
+					'label'       => $label,
+					/* Translators: %s field name. */
+					'description' => sprintf( __( 'Choose how the "%s" field is displayed.', 'woocommerce' ), $label ),
+					'section'     => 'woocommerce_checkout',
+					'settings'    => 'woocommerce_checkout_' . $field . '_field',
+					'type'        => 'radio',
+					'choices'     => array(
+						'hidden'   => __( 'Hidden', 'woocommerce' ),
+						'optional' => __( 'Optional', 'woocommerce' ),
+						'required' => __( 'Required', 'woocommerce' ),
+					),
+				)
+			);
+		}
 	}
 }
 

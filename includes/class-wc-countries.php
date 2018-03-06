@@ -635,7 +635,7 @@ class WC_Countries {
 				'class'        => array( 'form-row-wide' ),
 				'autocomplete' => 'organization',
 				'priority'     => 30,
-				'required'     => false,
+				'required'     => 'required' === get_option( 'woocommerce_checkout_company_field', 'optional' ),
 			),
 			'country'    => array(
 				'type'         => 'country',
@@ -655,9 +655,9 @@ class WC_Countries {
 				'priority'     => 50,
 			),
 			'address_2'  => array(
-				'placeholder'  => esc_attr__( 'Apartment, suite, unit etc. (optional)', 'woocommerce' ),
+				'placeholder'  => esc_attr__( 'Apartment, suite, unit etc.', 'woocommerce' ),
 				'class'        => array( 'form-row-wide', 'address-field' ),
-				'required'     => false,
+				'required'     => 'required' === get_option( 'woocommerce_checkout_address_2_field', 'optional' ),
 				'autocomplete' => 'address-line2',
 				'priority'     => 60,
 			),
@@ -686,6 +686,14 @@ class WC_Countries {
 				'priority'     => 90,
 			),
 		);
+
+		if ( 'hidden' === get_option( 'woocommerce_checkout_company_field', 'optional' ) ) {
+			unset( $fields['company'] );
+		}
+
+		if ( 'hidden' === get_option( 'woocommerce_checkout_address_2_field', 'optional' ) ) {
+			unset( $fields['address_2'] );
+		}
 
 		return apply_filters( 'woocommerce_default_address_fields', $fields );
 	}
@@ -1203,16 +1211,18 @@ class WC_Countries {
 
 		// Add email and phone fields.
 		if ( 'billing_' === $type ) {
-			$address_fields['billing_phone'] = array(
-				'label'        => __( 'Phone', 'woocommerce' ),
-				'description'  => __( 'We may use this number to contact you if there are any problems with your order.', 'woocommerce' ),
-				'required'     => true,
-				'type'         => 'tel',
-				'class'        => array( 'form-row-wide' ),
-				'validate'     => array( 'phone' ),
-				'autocomplete' => 'tel',
-				'priority'     => 100,
-			);
+			if ( 'hidden' !== get_option( 'woocommerce_checkout_phone_field', 'optional' ) ) {
+				$address_fields['billing_phone'] = array(
+					'label'        => __( 'Phone', 'woocommerce' ),
+					'description'  => __( 'We may use this number to contact you if there are any problems with your order.', 'woocommerce' ),
+					'required'     => 'required' === get_option( 'woocommerce_checkout_phone_field', 'optional' ),
+					'type'         => 'tel',
+					'class'        => array( 'form-row-wide' ),
+					'validate'     => array( 'phone' ),
+					'autocomplete' => 'tel',
+					'priority'     => 100,
+				);
+			}
 			$address_fields['billing_email'] = array(
 				'label'        => __( 'Email address', 'woocommerce' ),
 				'description'  => __( "We'll send order updates to this address, and this will be used to allow access to your account.", 'woocommerce' ),

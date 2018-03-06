@@ -1286,11 +1286,10 @@ p.demo_store,
 			font-weight: 700;
 			border: 0 !important;
 			text-decoration: none;
-			visibility: hidden; // Only show optional by default.
 		}
 
 		.optional {
-			visibility: visible;
+			visibility: hidden;
 		}
 
 		.input-checkbox {

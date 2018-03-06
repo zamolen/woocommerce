@@ -414,6 +414,12 @@ class WC_Frontend_Scripts {
 				self::enqueue_style( $handle, $args['src'], $args['deps'], $args['version'], $args['media'], $args['has_rtl'] );
 			}
 		}
+
+		if ( true === wc_string_to_bool( get_option( 'woocommerce_checkout_label_required_fields', 'yes' ) ) ) {
+			wp_add_inline_style( 'woocommerce-general', '.woocommerce form .form-row .required { visibility: visible; } .woocommerce form .form-row .optional { visibility: hidden; }' );
+		} else {
+			wp_add_inline_style( 'woocommerce-general', '.woocommerce form .form-row .required { visibility: hidden; } .woocommerce form .form-row .optional { visibility: visible; }' );
+		}
 	}
 
 	/**
