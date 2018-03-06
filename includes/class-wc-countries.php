@@ -1225,7 +1225,7 @@ class WC_Countries {
 			}
 			$address_fields['billing_email'] = array(
 				'label'        => __( 'Email address', 'woocommerce' ),
-				'description'  => __( "We'll send order updates to this address, and this will be used to allow access to your account.", 'woocommerce' ),
+				'description'  => __( "We'll send order updates to this address.", 'woocommerce' ),
 				'required'     => true,
 				'type'         => 'email',
 				'class'        => array( 'form-row-wide' ),
