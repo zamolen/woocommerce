@@ -519,6 +519,15 @@ function wc_query_string_form_fields( $values = null, $exclude = array(), $curre
 }
 
 /**
+ * Output privacy policy text.
+ *
+ * @since 3.4.0
+ */
+function woocommerce_output_privacy_policy_text() {
+	echo wpautop( wp_kses_post( get_option( 'woocommerce_checkout_privacy_text', '' ) ) );
+}
+
+/**
  * Template pages
  */
 
@@ -2284,13 +2293,13 @@ if ( ! function_exists( 'woocommerce_form_field' ) ) {
 				$field_html .= '<label for="' . esc_attr( $label_id ) . '" class="' . esc_attr( implode( ' ', $args['label_class'] ) ) . '">' . $args['label'] . $required . '</label>';
 			}
 
-			$field_html .= '<span class="woocommerce-input-wrapper">' . $field;
-
 			if ( $args['description'] ) {
-				$field_html .= '<span class="description" data-title="' . esc_attr( $args['description'] ) . '"><span>' . esc_html( $args['description'] ) . '</span></span>';
+				$field_html .= '<span class="woocommerce-input-wrapper woocommerce-input-wrapper--has-description">' . $field;
+				$field_html .= '<span class="description">' . esc_html( $args['description'] ) . '</span>';
+				$field_html .= '</span>';
+			} else {
+				$field_html .= '<span class="woocommerce-input-wrapper">' . $field . '</span>';
 			}
-
-			$field_html .= '</span>';
 
 			$container_class = esc_attr( implode( ' ', $args['class'] ) );
 			$container_id    = esc_attr( $args['id'] ) . '_field';

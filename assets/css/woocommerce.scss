@@ -1934,80 +1934,19 @@ button.pswp__button--zoom:hover {
 		}
 
 		.woocommerce-input-wrapper {
-			position: relative;
-		}
-
-		.privacy-notice + input {
-			padding-right: 30px;
-		}
-
-		.woocommerce-input-wrapper .description {
-			background: #999;
-			color: #fff;
-			font-size: 11px;
-			border-radius: 3px;
-			float: right;
-			position: absolute;
-			right: 0;
-			top: 50%;
-			cursor: help;
-			margin: -10px 1em;
-
-			span {
-				padding-top: 20px;
+			.description {
+				margin-top: .5em;
+				display: block;
+				font-size: .92em;
+				color: #777;
+				opacity: 0;
 				height: 0;
-				width: 20px;
-				overflow: hidden;
-				position: relative;
-				display: block;
-
-				&:before {
-					content: "?";
-					position: absolute;
-					top: 0;
-					left: 0;
-					width: 20px;
-					line-height: 20px;
-					text-align: center;
-				}
+				transition: none;
 			}
-
-			&:before {
-				left:100%;
-				top:50%;
-				margin-left:1px;
-				transform:translatey(-50%) rotate(90deg);
-				content: "";
-				position: absolute;
-				border-width: 4px 6px 0 6px;
-				border-style: solid;
-				border-color: rgba(0,0,0,0.7) transparent transparent     transparent;
-				z-index: 100;
-				display: none;
-			}
-			&:after {
-				left:100%;
-				top:50%;
-				margin-left:8px;
-				transform: translateX(0%) translateY(-50%);
-				content: attr(data-title);
-				position: absolute;
-				background: rgba(0,0,0,0.7);
-				text-align: center;
-				color: #fff;
-				padding: 1em;
-				font-size: 12px;
-				min-width: 200px;
-				border-radius: 5px;
-				pointer-events: none;
-				z-index: 100;
-				display: none;
-			}
-			&:hover:before,
-			&:focus:before,
-			&:hover:after,
-			&:focus:after {
-				display: block;
+			input:focus + .description {
+				opacity: 1;
+				height: auto;
+				transition: opacity 0.4s ease-in-out;
 			}
 		}
 	}

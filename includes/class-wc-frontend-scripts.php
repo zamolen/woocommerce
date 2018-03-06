@@ -415,10 +415,18 @@ class WC_Frontend_Scripts {
 			}
 		}
 
+		// Inline styles.
+		wp_register_style( 'woocommerce-checkout', false );
+		wp_enqueue_style( 'woocommerce-checkout' );
+
 		if ( true === wc_string_to_bool( get_option( 'woocommerce_checkout_label_required_fields', 'yes' ) ) ) {
-			wp_add_inline_style( 'woocommerce-general', '.woocommerce form .form-row .required { visibility: visible; } .woocommerce form .form-row .optional { visibility: hidden; }' );
+			wp_add_inline_style( 'woocommerce-checkout', '.woocommerce form .form-row .required { visibility: visible; } .woocommerce form .form-row .optional { visibility: hidden; }' );
 		} else {
-			wp_add_inline_style( 'woocommerce-general', '.woocommerce form .form-row .required { visibility: hidden; } .woocommerce form .form-row .optional { visibility: visible; }' );
+			wp_add_inline_style( 'woocommerce-checkout', '.woocommerce form .form-row .required { visibility: hidden; } .woocommerce form .form-row .optional { visibility: visible; }' );
+		}
+
+		if ( wc_get_page_id( 'terms' ) > 0 ) {
+			wp_add_inline_style( 'woocommerce-checkout', '.woocommerce-terms-and-conditions { display: none; max-height: 200px; overflow: auto; }' );
 		}
 	}
 

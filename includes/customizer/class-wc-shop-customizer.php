@@ -243,6 +243,43 @@ class WC_Shop_Customizer {
 						}
 					} );
 				} );
+
+				wp.customize( 'woocommerce_checkout_privacy_checkbox', function( setting ) {
+					setting.bind( function( value ) {
+						var text = wp.customize( 'woocommerce_checkout_privacy_text' );
+
+						if ( value && ! text.callbacks.has( notice.preview ) ) {
+							text.bind( text.preview );
+						} else if ( ! value ) {
+							text.unbind( text.preview );
+						}
+					} );
+				} );
+
+				wp.customize( 'woocommerce_checkout_privacy_text', function( setting ) {
+					setting.bind( function( value ) {
+						var checkbox = wp.customize( 'woocommerce_checkout_privacy_checkbox' );
+
+						if ( checkbox.get() ) {
+							$( '.woocommerce-privacy-policy-text' ).text( value );
+						}
+					} );
+				} );
+
+				wp.customize.section( 'woocommerce_checkout_privacy_checkbox', function( section ) {
+					section.expanded.bind( function( isExpanded ) {
+						if ( isExpanded ) {
+							var text     = wp.customize( 'woocommerce_checkout_privacy_checkbox' ),
+								checkbox = wp.customize( 'woocommerce_checkout_privacy_text' );
+
+							if ( checkbox.get() && ! text.callbacks.has( text.preview ) ) {
+								text.bind( text.preview );
+							} else if ( ! checkbox.get() ) {
+								text.unbind( text.preview );
+							}
+						}
+					} );
+				} );
 			} );
 		</script>
 		<?php
@@ -697,7 +734,7 @@ class WC_Shop_Customizer {
 			'woocommerce_checkout_label_required_fields',
 			array(
 				'label'       => __( 'Label required fields', 'woocommerce' ),
-				'description' => __( 'Choose how required fields are labeled.', 'woocommerce' ),
+				'description' => __( 'Choose to label required or optional fields on the checkout.', 'woocommerce' ),
 				'section'     => 'woocommerce_checkout',
 				'settings'    => 'woocommerce_checkout_label_required_fields',
 				'type'        => 'radio',
@@ -744,25 +781,57 @@ class WC_Shop_Customizer {
 		}
 
 		$wp_customize->add_setting(
+			'woocommerce_checkout_privacy_checkbox',
+			array(
+				'default'              => 'no',
+				'type'                 => 'option',
+				'capability'           => 'manage_woocommerce',
+				'sanitize_callback'    => 'wc_bool_to_string',
+				'sanitize_js_callback' => 'wc_string_to_bool',
+			)
+		);
+
+		$wp_customize->add_setting(
 			'woocommerce_checkout_privacy_text',
 			array(
 				'default'           => __( 'The information collected by this form will be used to process your order and allow access to your account (if you create one). For more information check out our <a href="#">privacy policy</a>.', 'woocommerce' ),
 				'type'              => 'option',
 				'capability'        => 'manage_woocommerce',
 				'sanitize_callback' => 'wp_kses_post',
+				'transport'         => 'postMessage',
 			)
 		);
 
 		$wp_customize->add_control(
 			'woocommerce_checkout_privacy_text',
 			array(
-				'label'       => __( 'Privacy text', 'woocommerce' ),
-				'description' => __( 'This text will be shown on the checkout above the place order button.', 'woocommerce' ),
+				'label'       => __( 'Privacy policy', 'woocommerce' ),
+				'description' => __( 'If the privacy checkbox is enabled, customers will need to acknowledge your privacy policy to place an order.', 'woocommerce' ),
 				'section'     => 'woocommerce_checkout',
 				'settings'    => 'woocommerce_checkout_privacy_text',
 				'type'        => 'textarea',
 			)
 		);
+
+		$wp_customize->add_control(
+			'woocommerce_checkout_privacy_checkbox',
+			array(
+				'label'    => __( 'Enable privacy checkbox', 'woocommerce' ),
+				'section'  => 'woocommerce_checkout',
+				'settings' => 'woocommerce_checkout_privacy_checkbox',
+				'type'     => 'checkbox',
+			)
+		);
+
+		if ( isset( $wp_customize->selective_refresh ) ) {
+			$wp_customize->selective_refresh->add_partial(
+				'woocommerce_checkout_privacy_text', array(
+					'selector'            => '.woocommerce-privacy-policy-text',
+					'container_inclusive' => false,
+					'render_callback'     => 'woocommerce_output_privacy_policy_text',
+				)
+			);
+		}
 	}
 }
 
