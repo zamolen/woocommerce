@@ -677,10 +677,10 @@ class WC_Shop_Customizer {
 		$wp_customize->add_section(
 			'woocommerce_checkout',
 			array(
-				'title'       => __( 'Checkout Form Options', 'woocommerce' ),
+				'title'       => __( 'Checkout Form', 'woocommerce' ),
 				'priority'    => 20,
 				'panel'       => 'woocommerce',
-				'description' => __( 'Choose whether your checkout form needs to collect certain information.', 'woocommerce' ),
+				'description' => __( 'Choose whether your checkout form needs to collect or display certain information.', 'woocommerce' ),
 			)
 		);
 
@@ -697,7 +697,7 @@ class WC_Shop_Customizer {
 			'woocommerce_checkout_label_required_fields',
 			array(
 				'label'       => __( 'Label required fields', 'woocommerce' ),
-				'description' => __( 'Choose if required or optional fields should be labeled.', 'woocommerce' ),
+				'description' => __( 'Choose how required fields are labeled.', 'woocommerce' ),
 				'section'     => 'woocommerce_checkout',
 				'settings'    => 'woocommerce_checkout_label_required_fields',
 				'type'        => 'radio',
@@ -742,6 +742,27 @@ class WC_Shop_Customizer {
 				)
 			);
 		}
+
+		$wp_customize->add_setting(
+			'woocommerce_checkout_privacy_text',
+			array(
+				'default'           => __( 'The information collected by this form will be used to process your order and allow access to your account (if you create one). For more information check out our <a href="#">privacy policy</a>.', 'woocommerce' ),
+				'type'              => 'option',
+				'capability'        => 'manage_woocommerce',
+				'sanitize_callback' => 'wp_kses_post',
+			)
+		);
+
+		$wp_customize->add_control(
+			'woocommerce_checkout_privacy_text',
+			array(
+				'label'       => __( 'Privacy text', 'woocommerce' ),
+				'description' => __( 'This text will be shown on the checkout above the place order button.', 'woocommerce' ),
+				'section'     => 'woocommerce_checkout',
+				'settings'    => 'woocommerce_checkout_privacy_text',
+				'type'        => 'textarea',
+			)
+		);
 	}
 }
 

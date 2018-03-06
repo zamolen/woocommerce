@@ -1,14 +1,29 @@
 <?php
 /**
- * Checkout terms and conditions checkbox
+ * Checkout terms and conditions area.
  *
  * @author  WooThemes
  * @package WooCommerce/Templates
  * @version 3.4.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+defined( 'ABSPATH' ) || exit;
+
+$privacy_text = get_option( 'woocommerce_checkout_privacy_text', '' );
+
+if ( $privacy_text ) {
+	echo '<div class="woocommerce-privacy-policy">';
+	echo wpautop( wp_kses_post( $privacy_text ) );
+	?>
+	<p class="form-row validate-required">
+		<label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox">
+			<input type="checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" name="privacy" <?php checked( isset( $_POST['privacy'] ), true ); ?> id="privacy" />
+			<span><?php esc_html_e( 'I agree to the storage and handling of my information by this website.', 'woocommerce' ); ?></span> <span class="required">*</span>
+		</label>
+		<input type="hidden" name="privacy-field" value="1" />
+	</p>
+	<?php
+	echo '</div>';
 }
 
 $terms_page = wc_get_page_id( 'terms' ) > 0 ? get_post( wc_get_page_id( 'terms' ) ) : false;

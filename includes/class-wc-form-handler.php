@@ -361,6 +361,11 @@ class WC_Form_Handler {
 					return;
 				}
 
+				if ( ! empty( $_POST['privacy-field'] ) && empty( $_POST['privacy'] ) ) {
+					wc_add_notice( __( 'Please acknowledge our privacy policy.', 'woocommerce' ), 'error' );
+					return;
+				}
+
 				// Update payment method
 				if ( $order->needs_payment() ) {
 					$payment_method     = isset( $_POST['payment_method'] ) ? wc_clean( $_POST['payment_method'] ) : false;

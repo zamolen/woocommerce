@@ -698,6 +698,10 @@ class WC_Checkout {
 			$errors->add( 'terms', __( 'You must accept our Terms &amp; Conditions.', 'woocommerce' ) );
 		}
 
+		if ( empty( $data['woocommerce_checkout_update_totals'] ) && ! empty( $_POST['privacy-field'] ) && empty( $data['privacy'] ) ) {
+			$errors->add( 'privacy', __( 'Please acknowledge our privacy policy.', 'woocommerce' ) );
+		}
+
 		if ( WC()->cart->needs_shipping() ) {
 			$shipping_country = WC()->customer->get_shipping_country();
 
