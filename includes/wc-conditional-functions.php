@@ -4,15 +4,11 @@
  *
  * Functions for determining the current query/page.
  *
- * @author      WooThemes
- * @category    Core
- * @package     WooCommerce/Functions
- * @version     2.3.0
+ * @package WooCommerce/Functions
+ * @version 2.3.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Is_woocommerce - Returns true if on a page which uses WooCommerce templates (cart and checkout are standard pages with shortcodes and thus are not included).
@@ -272,7 +268,7 @@ if ( ! function_exists( 'is_filtered' ) ) {
 	 * @return bool
 	 */
 	function is_filtered() {
-		return apply_filters( 'woocommerce_is_filtered', ( count( WC_Query::get_layered_nav_chosen_attributes() ) > 0 || isset( $_GET['max_price'] ) || isset( $_GET['min_price'] ) || isset( $_GET['rating_filter'] ) ) );
+		return apply_filters( 'woocommerce_is_filtered', ( count( WC_Query::get_layered_nav_chosen_attributes() ) > 0 || isset( $_GET['max_price'] ) || isset( $_GET['min_price'] ) || isset( $_GET['rating_filter'] ) ) ); // WPCS: input var ok, CSRF ok.
 	}
 }
 
@@ -308,7 +304,7 @@ if ( ! function_exists( 'meta_is_product_attribute' ) ) {
 		if ( $product && method_exists( $product, 'get_variation_attributes' ) ) {
 			$variation_attributes = $product->get_variation_attributes();
 			$attributes           = $product->get_attributes();
-			return ( in_array( $name, array_keys( $attributes ) ) && in_array( $value, $variation_attributes[ $attributes[ $name ]['name'] ] ) );
+			return ( in_array( $name, array_keys( $attributes ), true ) && in_array( $value, $variation_attributes[ $attributes[ $name ]['name'] ], true ) );
 		} else {
 			return false;
 		}
