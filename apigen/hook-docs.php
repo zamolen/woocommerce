@@ -184,7 +184,7 @@ class WC_HookFinder {
 			}
 
 			foreach ( self::$custom_hooks_found as $hook => $details ) {
-				if ( ! strstr( $hook, 'woocommerce' ) && ! strstr( $hook, 'product' ) && ! strstr( $hook, 'wc_' ) ) {
+				if ( ! strstr( $hook, 'woocommerce' ) && ! strstr( $hook, 'product' ) && ! strstr( $hook, 'wc_' ) && ! strstr( $hook, '$this->' ) ) {
 					unset( self::$custom_hooks_found[ $hook ] );
 				}
 			}
