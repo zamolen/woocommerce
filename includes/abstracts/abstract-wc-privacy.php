@@ -24,7 +24,7 @@ abstract class WC_Abstract_Privacy {
 	 *
 	 * @var string
 	 */
-	public $privacy_name;
+	public $name;
 
 	/**
 	 * This is a list of exporters.
@@ -43,12 +43,12 @@ abstract class WC_Abstract_Privacy {
 	/**
 	 * Constructor
 	 *
-	 * @param string $privacy_name Privacy identifier
+	 * @param string $name Privacy identifier
 	 */
-	public function __construct( $privacy_name = '' ) {
-		$this->privacy_name = $privacy_name;
-		$this->exporters    = array();
-		$this->erasers      = array();
+	public function __construct( $name = '' ) {
+		$this->name      = $name;
+		$this->exporters = array();
+		$this->erasers   = array();
 
 		add_action( 'admin_init', array( $this, 'add_privacy_message' ) );
 		add_filter( 'wp_privacy_personal_data_exporters', array( $this, 'register_exporters' ) );
@@ -60,7 +60,7 @@ abstract class WC_Abstract_Privacy {
 	 */
 	public function add_privacy_message() {
 		if ( function_exists( 'wp_add_privacy_policy_content' ) ) {
-			wp_add_privacy_policy_content( $this->privacy_name, $this->get_message() );
+			wp_add_privacy_policy_content( $this->name, $this->get_message() );
 		}
 	}
 
