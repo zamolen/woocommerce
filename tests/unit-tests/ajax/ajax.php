@@ -126,7 +126,36 @@ class WC_Tests_Ajax extends WC_Unit_Test_Case {
 		} catch ( Exception $e ) { //phpcs:ignore
 			// We expected this, do nothing.
 		}
-		$this->assertEquals( 1, did_action( 'wc_ajax_get_refreshed_fragments' ) );
+
+		ob_start();
+		woocommerce_mini_cart();
+		$mini_cart = ob_get_clean();
+		$this->assertEquals( wp_json_encode(
+			array(
+				'fragments' => apply_filters(
+					'woocommerce_add_to_cart_fragments', array(
+						'div.widget_shopping_cart_content' => '<div class="widget_shopping_cart_content">' . $mini_cart . '</div>',
+					)
+				),
+				'cart_hash' => apply_filters( 'woocommerce_add_to_cart_hash', WC()->cart->get_cart_for_session() ? md5( wp_json_encode( WC()->cart->get_cart_for_session() ) ) : '', WC()->cart->get_cart_for_session() ),
+			)
+		), $this->_last_ajax_response );
+	}
+
+	public function test_apply_coupon() {
+		// Test not supplying coupon code
+		try {
+			$_POST = array();
+			$_POST['security'] = wp_create_nonce( 'apply-coupon' );
+			$this->_wc_ajax_request( 'apply_coupon' );
+		} catch ( Exception $e ) { //phpcs:ignore
+			// We expected this, do nothing.
+		}
+		ob_start();
+		wc_add_notice( WC_Coupon::get_generic_coupon_error( WC_Coupon::E_WC_COUPON_PLEASE_ENTER ), 'error' );
+		wc_print_notices();
+		$expected = ob_get_clean();
+		$this->assertEquals( $expected, $this->_last_ajax_response );
 	}
 
 	/**
