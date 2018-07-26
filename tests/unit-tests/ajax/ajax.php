@@ -14,6 +14,18 @@ class WC_Tests_Ajax extends WC_Unit_Test_Case {
 	 */
 	protected $_last_ajax_response = '';
 
+	/**
+	 * Saved error reporting level.
+	 *
+	 * @var integer
+	 */
+	protected $_error_level = 0;
+
+	/**
+	 * Setup specific for wc_ajax requests
+	 *
+	 * @return void
+	 */
 	public function setUp() {
 		parent::setUp();
 		// Handle ajax die calls
@@ -27,6 +39,11 @@ class WC_Tests_Ajax extends WC_Unit_Test_Case {
 		error_reporting( $this->_error_level & ~E_WARNING );
 	}
 
+	/**
+	 * Return the die handler for ajax requests
+	 *
+	 * @return void
+	 */
 	public function get_ajax_die_handler() {
 		return array( $this, 'ajax_die_handler' );
 	}
@@ -58,7 +75,7 @@ class WC_Tests_Ajax extends WC_Unit_Test_Case {
 	}
 
 	/**
-	 * Handle Ajax requests
+	 * Make calls to ajax actions
 	 *
 	 * @param [type] $action
 	 * @return void
@@ -98,6 +115,11 @@ class WC_Tests_Ajax extends WC_Unit_Test_Case {
 		$this->assertEquals( '/?wc-ajax', WC_AJAX::get_endpoint() );
 	}
 
+	/**
+	 * Test the get_refreshed_fragments ajax request
+	 *
+	 * @return void
+	 */
 	public function test_get_refreshed_fragments() {
 		try {
 			$this->_wc_ajax_request( 'get_refreshed_fragments' );
@@ -107,6 +129,11 @@ class WC_Tests_Ajax extends WC_Unit_Test_Case {
 		$this->assertEquals( 1, did_action( 'wc_ajax_get_refreshed_fragments' ) );
 	}
 
+	/**
+	 * Clean up after these tests.
+	 *
+	 * @return void
+	 */
 	public function tearDown() {
 		parent::tearDown();
 		$_POST = array();
