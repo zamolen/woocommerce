@@ -135,10 +135,11 @@ class WC_REST_Coupons_V2_Controller extends WC_REST_Legacy_Coupons_Controller {
 	 * Get formatted item data.
 	 *
 	 * @since  3.0.0
-	 * @param  WC_Data $object WC_Data instance.
+	 * @param  WC_Data         $object  WC_Data instance.
+	 * @param  WP_REST_Request $request Request object.
 	 * @return array
 	 */
-	protected function get_formatted_item_data( $object ) {
+	protected function get_formatted_item_data( $object, $request ) {
 		$data = $object->get_data();
 
 		$format_decimal = array( 'amount', 'minimum_amount', 'maximum_amount' );
@@ -202,7 +203,7 @@ class WC_REST_Coupons_V2_Controller extends WC_REST_Legacy_Coupons_Controller {
 	 * @return WP_REST_Response
 	 */
 	public function prepare_object_for_response( $object, $request ) {
-		$data     = $this->get_formatted_item_data( $object );
+		$data     = $this->get_formatted_item_data( $object, $request );
 		$context  = ! empty( $request['context'] ) ? $request['context'] : 'view';
 		$data     = $this->add_additional_fields_to_object( $data, $request );
 		$data     = $this->filter_response_by_context( $data, $context );
