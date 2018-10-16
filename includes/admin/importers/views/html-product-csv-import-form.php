@@ -8,6 +8,9 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+$upload_info = wp_upload_dir();
+
 ?>
 <form class="wc-progress-form-content woocommerce-importer" enctype="multipart/form-data" method="post">
 	<header>
@@ -66,7 +69,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</th>
 					<td>
 						<label for="woocommerce-importer-file-url" class="woocommerce-importer-file-url-field-wrapper">
-							<code><?php echo esc_html( ABSPATH ) . ' '; ?></code><input type="text" id="woocommerce-importer-file-url" name="file_url" />
+							<code><?php echo esc_html( $upload_info['basedir'] . DIRECTORY_SEPARATOR ) . ' '; ?></code><input type="text" id="woocommerce-importer-file-url" name="file_url" />
 						</label>
 					</td>
 				</tr>

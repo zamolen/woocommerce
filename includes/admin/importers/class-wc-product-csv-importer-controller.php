@@ -91,7 +91,9 @@ class WC_Product_CSV_Importer_Controller {
 	 * @return bool
 	 */
 	public static function is_file_valid_csv( $file, $check_path = true ) {
-		if ( $check_path && apply_filters( 'woocommerce_product_csv_importer_check_import_file_path', true ) && 0 !== stripos( $file, ABSPATH ) ) {
+		$upload_info = wp_upload_dir();
+
+		if ( $check_path && apply_filters( 'woocommerce_product_csv_importer_check_import_file_path', true ) && 0 !== stripos( $file, $upload_info['basedir'] ) ) {
 			return false;
 		}
 
@@ -306,8 +308,13 @@ class WC_Product_CSV_Importer_Controller {
 	 * @return string|WP_Error
 	 */
 	public function handle_upload() {
+		$upload_info = wp_upload_dir();
 		// phpcs:disable WordPress.CSRF.NonceVerification.NoNonceVerification -- Nonce already verified in WC_Product_CSV_Importer_Controller::upload_form_handler()
-		$file_url = isset( $_POST['file_url'] ) ? wc_clean( wp_unslash( $_POST['file_url'] ) ) : '';
+		if ( isset( $_POST['file_url'] ) && ! empty( $_POST['file_url'] ) ) {
+			$file_url = $upload_info['basedir'] . DIRECTORY_SEPARATOR . wc_clean( wp_unslash( $_POST['file_url'] ) );
+		} else {
+			$file_url = '';
+		}
 
 		if ( empty( $file_url ) ) {
 			if ( ! isset( $_FILES['import'] ) ) {
@@ -349,12 +356,12 @@ class WC_Product_CSV_Importer_Controller {
 			wp_schedule_single_event( time() + DAY_IN_SECONDS, 'importer_scheduled_cleanup', array( $id ) );
 
 			return $upload['file'];
-		} elseif ( file_exists( ABSPATH . $file_url ) ) {
-			if ( ! self::is_file_valid_csv( ABSPATH . $file_url ) ) {
+		} elseif ( file_exists( $file_url ) ) {
+			if ( ! self::is_file_valid_csv( $file_url ) ) {
 				return new WP_Error( 'woocommerce_product_csv_importer_upload_file_invalid', __( 'Invalid file type. The importer supports CSV and TXT file formats.', 'woocommerce' ) );
 			}
 
-			return ABSPATH . $file_url;
+			return $file_url;
 		}
 		// phpcs:enable
 
