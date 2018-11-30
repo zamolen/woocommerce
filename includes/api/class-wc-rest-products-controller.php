@@ -178,12 +178,40 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 
 		// Filter product by stock_status.
 		if ( ! empty( $request['stock_status'] ) ) {
-			$args['meta_query'] = $this->add_meta_query( // WPCS: slow query ok.
-				$args, array(
-					'key'   => '_stock_status',
-					'value' => $request['stock_status'],
-				)
-			);
+			if ( 'lowstock' === $request['stock_status'] ) {
+				$low_stock = absint( max( get_option( 'woocommerce_notify_low_stock_amount' ), 1 ) );
+				$no_stock  = absint( max( get_option( 'woocommerce_notify_no_stock_amount' ), 0 ) );
+
+				$args['meta_query'] = $this->add_meta_query( // WPCS: slow query ok.
+					$args,
+					array(
+						'key'   => '_manage_stock',
+						'value' => 'yes',
+					)
+				);
+				$args['meta_query'] = $this->add_meta_query( // WPCS: slow query ok.
+					$args,
+					array(
+						'key'     => '_stock',
+						'value'   => array( $no_stock, $low_stock ),
+						'compare' => 'BETWEEN',
+						'type'    => 'NUMERIC',
+					)
+				);
+				$args['meta_query'] = $this->add_meta_query( // WPCS: slow query ok.
+					$args, array(
+						'key'   => '_stock_status',
+						'value' => 'instock',
+					)
+				);
+			} else {
+				$args['meta_query'] = $this->add_meta_query( // WPCS: slow query ok.
+					$args, array(
+						'key'   => '_stock_status',
+						'value' => $request['stock_status'],
+					)
+				);
+			}
 		}
 
 		// Filter by on sale products.
@@ -1310,7 +1338,7 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 		$params['stock_status'] = array(
 			'description'       => __( 'Limit result set to products with specified stock status.', 'woocommerce' ),
 			'type'              => 'string',
-			'enum'              => array_keys( wc_get_product_stock_status_options() ),
+			'enum'              => array_merge( array_keys( wc_get_product_stock_status_options() ), array( 'lowstock' ) ),
 			'sanitize_callback' => 'sanitize_text_field',
 			'validate_callback' => 'rest_validate_request_arg',
 		);
