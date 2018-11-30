@@ -374,8 +374,8 @@ abstract class WC_REST_Controller extends WP_REST_Controller {
 	 * @return array
 	 */
 	protected function add_meta_query( $args, $meta_query ) {
-		if ( ! empty( $args['meta_query'] ) ) {
-			$args['meta_query'] = array();
+		if ( empty( $args['meta_query'] ) ) {
+			$args['meta_query'] = array(); // WPCS: slow query ok.
 		}
 
 		$args['meta_query'][] = $meta_query;
