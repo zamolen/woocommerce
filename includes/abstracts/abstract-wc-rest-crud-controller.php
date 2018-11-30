@@ -264,6 +264,20 @@ abstract class WC_REST_CRUD_Controller extends WC_REST_Posts_Controller {
 	}
 
 	/**
+	 * Prepare query.
+	 * Override this method to introduce custom query data.
+	 *
+	 * @since 3.5.3
+	 * @param array           $args    Custom query args.
+	 * @param WP_REST_Request $request Full details about the request.
+	 *
+	 * @return array
+	 */
+	protected function prepare_query( $args, $request ) {
+		return $args;
+	}
+
+	/**
 	 * Prepare objects query.
 	 *
 	 * @since  3.0.0
@@ -311,7 +325,7 @@ abstract class WC_REST_CRUD_Controller extends WC_REST_Posts_Controller {
 		 * @param array           $args    Key value array of query var to query value.
 		 * @param WP_REST_Request $request The request used.
 		 */
-		$args = apply_filters( "woocommerce_rest_{$this->post_type}_object_query", $args, $request );
+		$args = apply_filters( "woocommerce_rest_{$this->post_type}_object_query", $this->prepare_query( $args, $request ), $request );
 
 		return $this->prepare_items_query( $args, $request );
 	}

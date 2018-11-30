@@ -71,15 +71,14 @@ class WC_REST_Products_Controller extends WC_REST_Products_V2_Controller {
 	}
 
 	/**
-	 * Make extra product orderby features supported by WooCommerce available to the WC API.
-	 * This includes 'price', 'popularity', and 'rating'.
+	 * Make extra product filtering features available to the WC API.
 	 *
+	 * @since 3.5.3
+	 * @param array           $args    Custom query args.
 	 * @param WP_REST_Request $request Request data.
 	 * @return array
 	 */
-	protected function prepare_objects_query( $request ) {
-		$args = WC_REST_CRUD_Controller::prepare_objects_query( $request );
-
+	protected function prepare_query( $args, $request ) {
 		// Set post_status.
 		$args['post_status'] = $request['status'];
 
