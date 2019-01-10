@@ -159,6 +159,7 @@ final class WC_Cart_Totals {
 			'price_includes_tax' => false,
 			'subtotal'           => 0,
 			'subtotal_tax'       => 0,
+			'subtotal_taxes'     => array(),
 			'total'              => 0,
 			'total_tax'          => 0,
 			'taxes'              => array(),
@@ -706,8 +707,9 @@ final class WC_Cart_Totals {
 			$subtotal_taxes = array();
 
 			if ( $this->calculate_tax && $item->product->is_taxable() ) {
-				$subtotal_taxes     = WC_Tax::calc_tax( $item->subtotal, $item->tax_rates, $item->price_includes_tax );
-				$item->subtotal_tax = array_sum( array_map( array( $this, 'round_line_tax' ), $subtotal_taxes ) );
+				$subtotal_taxes       = WC_Tax::calc_tax( $item->subtotal, $item->tax_rates, $item->price_includes_tax );
+				$item->subtotal_taxes = $subtotal_taxes;
+				$item->subtotal_tax   = array_sum( array_map( array( $this, 'round_line_tax' ), $subtotal_taxes ) );
 
 				if ( $item->price_includes_tax ) {
 					// Use unrounded taxes so we can re-calculate from the orders screen accurately later.
@@ -719,8 +721,22 @@ final class WC_Cart_Totals {
 			$this->cart->cart_contents[ $item_key ]['line_subtotal']     = wc_remove_number_precision( $item->subtotal );
 			$this->cart->cart_contents[ $item_key ]['line_subtotal_tax'] = wc_remove_number_precision( $item->subtotal_tax );
 		}
+
+		// Merge all subtotal taxes into single total.
+		$subtotal_taxes = array();
+
+		foreach ( $this->items as $item ) {
+			foreach ( $item->subtotal_taxes as $rate_id => $rate ) {
+				if ( ! isset( $taxes[ $rate_id ] ) ) {
+					$subtotal_taxes[ $rate_id ] = 0;
+				}
+				$subtotal_taxes[ $rate_id ] += $this->round_line_tax( $rate );
+			}
+		}
+		$subtotal_taxes = $this->round_merged_taxes( $subtotal_taxes );
+
 		$this->set_total( 'items_subtotal', array_sum( array_map( 'round', array_values( wp_list_pluck( $this->items, 'subtotal' ) ) ) ) );
-		$this->set_total( 'items_subtotal_tax', array_sum( array_values( wp_list_pluck( $this->items, 'subtotal_tax' ) ) ) );
+		$this->set_total( 'items_subtotal_tax', array_sum( $subtotal_taxes ) );
 
 		$this->cart->set_subtotal( $this->get_total( 'items_subtotal' ) );
 		$this->cart->set_subtotal_tax( $this->get_total( 'items_subtotal_tax' ) );
