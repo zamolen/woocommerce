@@ -869,7 +869,7 @@ class WC_Cart extends WC_Legacy_Cart {
 				$tax_totals[ $code ]->is_compound      = WC_Tax::is_compound( $key );
 				$tax_totals[ $code ]->label            = WC_Tax::get_rate_label( $key );
 				$tax_totals[ $code ]->amount          += wc_round_tax_total( $tax );
-				$tax_totals[ $code ]->formatted_amount = wc_price( wc_round_tax_total( $tax_totals[ $code ]->amount ) );
+				$tax_totals[ $code ]->formatted_amount = wc_price( $tax_totals[ $code ]->amount );
 			}
 		}
 
