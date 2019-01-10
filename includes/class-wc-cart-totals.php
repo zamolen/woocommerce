@@ -727,7 +727,7 @@ final class WC_Cart_Totals {
 
 		foreach ( $this->items as $item ) {
 			foreach ( $item->subtotal_taxes as $rate_id => $rate ) {
-				if ( ! isset( $taxes[ $rate_id ] ) ) {
+				if ( ! isset( $subtotal_taxes[ $rate_id ] ) ) {
 					$subtotal_taxes[ $rate_id ] = 0;
 				}
 				$subtotal_taxes[ $rate_id ] += $this->round_line_tax( $rate );
