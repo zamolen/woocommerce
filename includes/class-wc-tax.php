@@ -688,14 +688,11 @@ class WC_Tax {
 	/**
 	 * Round tax lines and return the sum.
 	 *
-	 * Uses wc_round_tax_total() which rounds to the store DP setting. This matches the rounding
-	 * in class-wc-cart-totals.php and means each line gets rounded before summing.
-	 *
-	 * @param array $taxes array of taxes to round.
-	 * @return float
+	 * @param   array
+	 * @return  float
 	 */
 	public static function get_tax_total( $taxes ) {
-		return array_sum( array_map( 'wc_round_tax_total', $taxes ) );
+		return array_sum( array_map( array( __CLASS__, 'round' ), $taxes ) );
 	}
 
 	/**

@@ -448,7 +448,7 @@ class WC_Tests_Tax extends WC_Unit_Test_Case {
 			'2' => '2',
 		);
 
-		$this->assertEquals( WC_Tax::get_tax_total( $to_total ), '3.67' );
+		$this->assertEquals( WC_Tax::get_tax_total( $to_total ), '3.665' );
 	}
 
 	/**
