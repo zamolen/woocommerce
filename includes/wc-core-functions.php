@@ -2196,3 +2196,78 @@ function wc_get_server_database_version() {
 		'number' => preg_replace( '/([^\d.]+).*/', '', $server_info ),
 	);
 }
+
+/**
+ * Begin sampling a handful of requests to see how long they take.
+ *
+ * @since 3.6.0
+ */
+function wc_sample_performance_data_start() {
+	if ( is_ajax() || 'yes' !== get_option( 'woocommerce_allow_tracking', 'no' ) ) {
+		return;
+	}
+
+	$transient = '';
+	if ( is_shop() ) {
+		$transient = 'woocommerce_tracker_shop_performance';
+	} else if ( is_product() ) {
+		$transient = 'woocommerce_tracker_single_product_performance';
+	} else if ( is_checkout() ) {
+		$transient = 'woocommerce_tracker_checkout_performance';
+	}
+
+	if ( ! $transient ) {
+		return;
+	}
+
+	$max_num_samples = 10;
+	$data            = get_transient( $transient );
+	if ( count ( $data ) >= $max_num_samples ) {
+		return;
+	}
+
+	set_transient( $transient . '_request', microtime( true ), MINUTE_IN_SECONDS );
+}
+add_action( 'wp', 'wc_sample_performance_data_start', 1 );
+
+/**
+ * Finish sampling a handful of requests to see how long they take.
+ *
+ * @since 3.6.0
+ */
+function wc_sample_performance_data_end() {
+	if ( is_ajax() || 'yes' !== get_option( 'woocommerce_allow_tracking', 'no' ) ) {
+		return;
+	}
+
+	$transient = '';
+	if ( is_shop() ) {
+		$transient = 'woocommerce_tracker_shop_performance';
+	} else if ( is_product() ) {
+		$transient = 'woocommerce_tracker_single_product_performance';
+	} else if ( is_checkout() ) {
+		$transient = 'woocommerce_tracker_checkout_performance';
+	}
+
+	if ( ! $transient ) {
+		return;
+	}
+
+	$start = (float) get_transient( $transient . '_request' );
+	if ( ! $start ) {
+		return;
+	}
+
+	$end      = microtime( true );
+	$duration = $end - $start;
+
+	$existing_samples = get_transient( $transient );
+	if ( ! is_array( $existing_samples ) ) {
+		$existing_samples = array();
+	}
+
+	$existing_samples[] = round( $duration, 3 );
+	set_transient( $transient, $existing_samples, WEEK_IN_SECONDS );
+	delete_transient( $transient . '_request' );
+}
+add_action( 'shutdown', 'wc_sample_performance_data_end', 99 );

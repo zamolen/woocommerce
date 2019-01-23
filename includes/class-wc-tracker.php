@@ -135,6 +135,9 @@ class WC_Tracker {
 		// Template overrides.
 		$data['admin_user_agents']  = self::get_admin_user_agents();
 
+		// Performance.
+		$data['performance']        = self::get_performance_data();
+
 		return apply_filters( 'woocommerce_tracker_data', $data );
 	}
 
@@ -489,7 +492,7 @@ class WC_Tracker {
 	}
 
 	/**
-	 * Get order totals
+	 * Get order totals.
 	 *
 	 * @return array
 	 */
@@ -512,6 +515,29 @@ class WC_Tracker {
 
 		return array(
 			'gross' => $gross_total,
+		);
+	}
+
+	/**
+	 * Gets average performance from samples taken.
+	 *
+	 * @see wc_sample_performance_data_start and wc_sample_performance_data_end
+	 * @return array
+	 */
+	public static function get_performance_data() {
+		$shop_performance           = get_transient( 'woocommerce_tracker_shop_performance' );
+		$single_product_performance = get_transient( 'woocommerce_tracker_single_product_performance' );
+		$checkout_performance       = get_transient( 'woocommerce_tracker_checkout_performance' );
+
+		// Calculate average of samples takes.
+		$shop_performance           = ! empty( $shop_performance ) ? round( array_sum( (array) $shop_performance ) / count( $shop_performance ) ) : 0;
+		$single_product_performance = ! empty( $single_product_performance ) ? round( array_sum( (array) $single_product_performance ) / count( $single_product_performance ) ) : 0;
+		$checkout_performance       = ! empty( $checkout_performance ) ? round( array_sum( (array) $checkout_performance ) / count( $checkout_performance ) ) : 0;
+
+		return array (
+			'shop'           => $shop_performance,
+			'single_product' => $single_product_performance,
+			'checkout'       => $checkout_performance,
 		);
 	}
 
