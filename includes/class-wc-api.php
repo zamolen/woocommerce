@@ -112,10 +112,7 @@ class WC_API extends WC_Legacy_API {
 		if ( ! class_exists( 'WP_REST_Server' ) ) {
 			return;
 		}
-
-		$this->rest_api_includes();
-
-		// Init REST API routes.
+		add_action( 'rest_api_init', array( $this, 'rest_api_includes' ), 9 );
 		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ), 10 );
 	}
 
