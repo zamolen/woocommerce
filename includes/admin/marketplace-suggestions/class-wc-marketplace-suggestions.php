@@ -29,6 +29,13 @@ class WC_Marketplace_Suggestions {
 
 		// Register hooks for rendering suggestions container markup.
 		add_action( 'wc_marketplace_suggestions_products_empty_state', array( __CLASS__, 'render_products_list_empty_state' ) );
+
+		// Register filter to add link out in product type dropdown.
+		add_action(
+			'woocommerce_product_edit_product_type_select_add_options',
+			array( __CLASS__, 'add_linkout_option' )
+		);
+
 	}
 
 	/**
@@ -79,6 +86,15 @@ class WC_Marketplace_Suggestions {
 	}
 
 	/**
+	 * Add a link from product type dropdown to product type extensions.
+	 */
+	public static function add_linkout_option() {
+		echo( '<option value="marketplace-suggestions-product-type-linkout">' );
+		echo( esc_html( __( 'More product types…', 'woocommerce' ) ) );
+		echo( '</option>' );
+	}
+
+	/**
 	 * Render suggestions containers in products list empty state.
 	 */
 	public static function render_products_list_empty_state() {
@@ -105,7 +121,7 @@ class WC_Marketplace_Suggestions {
 	 */
 	public static function show_suggestions_for_screen( $screen_id ) {
 		// We only show suggestions on certain admin screens.
-		if ( ! in_array( $screen_id, array( 'edit-product', 'edit-shop_order' ), true ) ) {
+		if ( ! in_array( $screen_id, array( 'edit-product', 'edit-shop_order', 'product' ), true ) ) {
 			return false;
 		}
 

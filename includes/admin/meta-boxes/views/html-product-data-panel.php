@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php foreach ( wc_get_product_types() as $value => $label ) : ?>
 					<option value="<?php echo esc_attr( $value ); ?>" <?php echo selected( $product_object->get_type(), $value, false ); ?>><?php echo esc_html( $label ); ?></option>
 				<?php endforeach; ?>
+				<?php do_action( 'woocommerce_product_edit_product_type_select_add_options' ); ?>
 				</optgroup>
 			</select>
 		</label>

@@ -351,9 +351,30 @@
 			hidePageElementsForEmptyState( usedSuggestionsContexts );
 		}
 
+		var lastValidProductType;
+
+		$( 'select#product-type' ).click( function( event ) {
+		    lastValidProductType = event.currentTarget.value
+		} );
+
+		$( 'select#product-type' ).change( function( event ) {
+			if ( 'marketplace-suggestions-product-type-linkout' !== event.currentTarget.value ) {
+		    	lastValidProductType = event.currentTarget.value
+				return;
+			}
+			// We could configure this URL in the json, i.e. make this a tiny suggestion context.
+			var url = "http://localhost:6322/wp-admin/admin.php?page=wc-addons&section=product-type";
+			if ( url ) {
+			    lastValidProductType = event.currentTarget.value
+				event.currentTarget.value = lastValidProductType;
+				window.open( url, 'blank' );
+			}
+		} );
+
 		if ( marketplace_suggestions.suggestions_data ) {
 			displaySuggestions( marketplace_suggestions.suggestions_data );
 		}
+
 	});
 
 })( jQuery, marketplace_suggestions, ajaxurl );
