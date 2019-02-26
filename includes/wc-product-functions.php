@@ -420,6 +420,7 @@ function wc_scheduled_sales() {
 		}
 		do_action( 'wc_after_products_starting_sales', $product_ids );
 
+		WC_Cache_Helper::get_transient_version( 'product', true );
 		delete_transient( 'wc_products_onsale' );
 	}
 
@@ -774,51 +775,6 @@ function wc_get_product_visibility_options() {
 			'search'  => __( 'Search results only', 'woocommerce' ),
 			'hidden'  => __( 'Hidden', 'woocommerce' ),
 		)
-	);
-}
-
-/**
- * Get min/max price meta query args.
- *
- * @since 3.0.0
- * @param array $args Min price and max price arguments.
- * @return array
- */
-function wc_get_min_max_price_meta_query( $args ) {
-	$min = isset( $args['min_price'] ) ? floatval( $args['min_price'] ) : 0;
-	$max = isset( $args['max_price'] ) ? floatval( $args['max_price'] ) : 9999999999;
-
-	/**
-	 * Adjust if the store taxes are not displayed how they are stored.
-	 * Kicks in when prices excluding tax are displayed including tax.
-	 */
-	if ( wc_tax_enabled() && 'incl' === get_option( 'woocommerce_tax_display_shop' ) && ! wc_prices_include_tax() ) {
-		$tax_classes = array_merge( array( '' ), WC_Tax::get_tax_classes() );
-		$class_min   = $min;
-		$class_max   = $max;
-
-		foreach ( $tax_classes as $tax_class ) {
-			$tax_rates = WC_Tax::get_rates( $tax_class );
-
-			if ( $tax_rates ) {
-				$class_min = $min + WC_Tax::get_tax_total( WC_Tax::calc_exclusive_tax( $min, $tax_rates ) );
-				$class_max = $max - WC_Tax::get_tax_total( WC_Tax::calc_exclusive_tax( $max, $tax_rates ) );
-			}
-		}
-
-		$min = $class_min;
-		$max = $class_max;
-	}
-
-	return apply_filters(
-		'woocommerce_get_min_max_price_meta_query',
-		array(
-			'key'     => '_price',
-			'value'   => array( $min, $max ),
-			'compare' => 'BETWEEN',
-			'type'    => 'DECIMAL(10,' . wc_get_price_decimals() . ')',
-		),
-		$args
 	);
 }
 
@@ -1309,4 +1265,41 @@ function wc_deferred_product_sync( $product_id ) {
 	}
 
 	$wc_deferred_product_sync[] = $product_id;
+}
+
+/**
+ * Add sorting index data for products.
+ */
+function wc_update_product_lookup_tables() {
+	global $wpdb;
+
+	$result = $wpdb->query(
+		"
+		INSERT IGNORE INTO {$wpdb->wc_product_meta_lookup} (`product_id`, `min_price`, `max_price`, `average_rating`, `total_sales`)
+		SELECT
+			posts.ID, MIN(meta1.meta_value), MAX(meta1.meta_value), meta2.meta_value, meta3.meta_value
+		FROM {$wpdb->posts} posts
+			LEFT JOIN {$wpdb->postmeta} meta1 ON posts.ID = meta1.post_id AND meta1.meta_key = '_price'
+			LEFT JOIN {$wpdb->postmeta} meta2 ON posts.ID = meta2.post_id AND meta2.meta_key = '_wc_average_rating'
+			LEFT JOIN {$wpdb->postmeta} meta3 ON posts.ID = meta3.post_id AND meta3.meta_key = 'total_sales'
+		WHERE
+			posts.post_type IN ('product', 'product_variation')
+			AND meta1.meta_value <> ''
+		GROUP BY
+			posts.ID
+		"
+	);
+
+	$result = $wpdb->query(
+		"
+		UPDATE
+			{$wpdb->wc_product_meta_lookup} lookup_table
+			LEFT JOIN {$wpdb->postmeta} meta1 ON lookup_table.product_id = meta1.post_id AND meta1.meta_key = '_manage_stock'
+			LEFT JOIN {$wpdb->postmeta} meta2 ON lookup_table.product_id = meta2.post_id AND meta2.meta_key = '_stock'
+		SET
+			lookup_table.stock = meta2.meta_value
+		WHERE
+			meta1.meta_value = 'yes'
+		"
+	);
 }

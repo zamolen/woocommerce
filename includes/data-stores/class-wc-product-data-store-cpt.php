@@ -351,7 +351,7 @@ class WC_Product_Data_Store_CPT extends WC_Data_Store_WP implements WC_Object_Da
 		$set_props = array();
 
 		foreach ( $meta_key_to_props as $meta_key => $prop ) {
-			$meta_value         = isset( $post_meta_values[ $meta_key ][0] ) ? $post_meta_values[ $meta_key ][0] : '';
+			$meta_value         = isset( $post_meta_values[ $meta_key ][0] ) ? $post_meta_values[ $meta_key ][0] : null;
 			$set_props[ $prop ] = maybe_unserialize( $meta_value ); // get_post_meta only unserializes single values.
 		}
 
@@ -360,28 +360,7 @@ class WC_Product_Data_Store_CPT extends WC_Data_Store_WP implements WC_Object_Da
 		$set_props['shipping_class_id'] = current( $this->get_term_ids( $product, 'product_shipping_class' ) );
 		$set_props['gallery_image_ids'] = array_filter( explode( ',', $set_props['gallery_image_ids'] ) );
 
-		if ( '' === $set_props['review_count'] ) {
-			unset( $set_props['review_count'] );
-			WC_Comments::get_review_count_for_product( $product );
-		}
-
-		if ( '' === $set_props['rating_counts'] ) {
-			unset( $set_props['rating_counts'] );
-			WC_Comments::get_rating_counts_for_product( $product );
-		}
-
-		if ( '' === $set_props['average_rating'] ) {
-			unset( $set_props['average_rating'] );
-			WC_Comments::get_average_rating_for_product( $product );
-		}
-
 		$product->set_props( $set_props );
-
-		// Handle sale dates on the fly in case of missed cron schedule.
-		if ( $product->is_type( 'simple' ) && $product->is_on_sale( 'edit' ) && $product->get_sale_price( 'edit' ) !== $product->get_price( 'edit' ) ) {
-			update_post_meta( $product->get_id(), '_price', $product->get_sale_price( 'edit' ) );
-			$product->set_price( $product->get_sale_price( 'edit' ) );
-		}
 	}
 
 	/**
@@ -648,6 +627,10 @@ class WC_Product_Data_Store_CPT extends WC_Data_Store_WP implements WC_Object_Da
 			} else {
 				do_action( 'woocommerce_product_set_stock_status', $product->get_id(), $product->get_stock_status(), $product );
 			}
+		}
+
+		if ( array_intersect( $this->updated_props, array( 'regular_price', 'sale_price', 'date_on_sale_from', 'date_on_sale_to', 'total_sales', 'average_rating', 'stock_quantity', 'manage_stock' ) ) ) {
+			$this->update_lookup_table( $product->get_id(), 'wc_product_meta_lookup' );
 		}
 
 		// Trigger action so 3rd parties can deal with updated props.
@@ -1301,6 +1284,14 @@ class WC_Product_Data_Store_CPT extends WC_Data_Store_WP implements WC_Object_Da
 		$wpdb->query( $sql );
 
 		wp_cache_delete( $product_id_with_stock, 'post_meta' );
+
+		/**
+		 * Fire an action for this direct update so it can be detected by other code.
+		 *
+		 * @since 3.6
+		 * @param int $product_id_with_stock Product ID that was updated directly.
+		 */
+		do_action( 'woocommerce_updated_product_stock', $product_id_with_stock );
 	}
 
 	/**
@@ -1352,12 +1343,23 @@ class WC_Product_Data_Store_CPT extends WC_Data_Store_WP implements WC_Object_Da
 		}
 
 		wp_cache_delete( $product_id, 'post_meta' );
+
+		$this->update_lookup_table( $product_id, 'wc_product_meta_lookup' );
+
+		/**
+		 * Fire an action for this direct update so it can be detected by other code.
+		 *
+		 * @since 3.6
+		 * @param int $product_id Product ID that was updated directly.
+		 */
+		do_action( 'woocommerce_updated_product_sales', $product_id );
 	}
 
 	/**
 	 * Update a products average rating meta.
 	 *
 	 * @since 3.0.0
+	 * @todo Deprecate unused function?
 	 * @param WC_Product $product Product object.
 	 */
 	public function update_average_rating( $product ) {
@@ -1369,6 +1371,7 @@ class WC_Product_Data_Store_CPT extends WC_Data_Store_WP implements WC_Object_Da
 	 * Update a products review count meta.
 	 *
 	 * @since 3.0.0
+	 * @todo Deprecate unused function?
 	 * @param WC_Product $product Product object.
 	 */
 	public function update_review_count( $product ) {
@@ -1379,6 +1382,7 @@ class WC_Product_Data_Store_CPT extends WC_Data_Store_WP implements WC_Object_Da
 	 * Update a products rating counts.
 	 *
 	 * @since 3.0.0
+	 * @todo Deprecate unused function?
 	 * @param WC_Product $product Product object.
 	 */
 	public function update_rating_counts( $product ) {
@@ -1865,5 +1869,30 @@ class WC_Product_Data_Store_CPT extends WC_Data_Store_WP implements WC_Object_Da
 		}
 
 		return $products;
+	}
+
+	/**
+	 * Get data to save to a lookup table.
+	 *
+	 * @since 3.6.0
+	 * @param int    $id ID of object to update.
+	 * @param string $table Lookup table name.
+	 * @return array
+	 */
+	protected function get_data_for_lookup_table( $id, $table ) {
+		if ( 'wc_product_meta_lookup' === $table ) {
+			$price_meta   = (array) get_post_meta( $id, '_price', false );
+			$manage_stock = get_post_meta( $id, '_manage_stock', true );
+			$stock        = 'yes' === $manage_stock ? wc_stock_amount( get_post_meta( $id, '_manage_stock', true ) ) : null;
+			return array(
+				'product_id'     => absint( $id ),
+				'min_price'      => reset( $price_meta ),
+				'max_price'      => end( $price_meta ),
+				'average_rating' => get_post_meta( $id, '_wc_average_rating', true ),
+				'total_sales'    => get_post_meta( $id, 'total_sales', true ),
+				'stock'          => $stock,
+			);
+		}
+		return array();
 	}
 }
