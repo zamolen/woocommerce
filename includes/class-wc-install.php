@@ -126,6 +126,7 @@ class WC_Install {
 		),
 		'3.6.0' => array(
 			'wc_update_360_product_lookup_tables',
+			'wc_update_360_term_meta',
 			'wc_update_360_db_version',
 		),
 	);
@@ -821,7 +822,7 @@ CREATE TABLE {$wpdb->prefix}wc_download_log (
   permission_id BIGINT UNSIGNED NOT NULL,
   user_id BIGINT UNSIGNED NULL,
   user_ip_address VARCHAR(100) NULL DEFAULT '',
-  PRIMARY KEY  (download_log_id),
+  PRIMARY KEY (download_log_id),
   KEY permission_id (permission_id),
   KEY timestamp (timestamp)
 ) $collate;
