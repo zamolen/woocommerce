@@ -61,6 +61,7 @@ class WC_Product_Variation_Data_Store_CPT extends WC_Product_Data_Store_CPT impl
 				'menu_order'      => $post_object->menu_order,
 				'reviews_allowed' => 'open' === $post_object->comment_status,
 				'parent_id'       => $post_object->post_parent,
+				'post_excerpt'    => $post_object->post_excerpt,
 			)
 		);
 
@@ -82,6 +83,20 @@ class WC_Product_Variation_Data_Store_CPT extends WC_Product_Data_Store_CPT impl
 		if ( $post_object->post_title !== $new_title ) {
 			$product->set_name( $new_title );
 			$GLOBALS['wpdb']->update( $GLOBALS['wpdb']->posts, array( 'post_title' => $new_title ), array( 'ID' => $product->get_id() ) );
+			clean_post_cache( $product->get_id() );
+		}
+
+		/**
+		 * If a variation has no excerpt, update here. Used when searching for variations by attribute values.
+		 */
+		if ( '' === $post_object->post_excerpt ) {
+			$new_excerpt = wc_get_formatted_variation( $product, true, false );
+			$product->set_props(
+				array(
+					'post_excerpt' => $new_excerpt,
+				)
+			);
+			$GLOBALS['wpdb']->update( $GLOBALS['wpdb']->posts, array( 'post_excerpt' => $new_excerpt ), array( 'ID' => $product->get_id() ) );
 			clean_post_cache( $product->get_id() );
 		}
 
@@ -119,6 +134,7 @@ class WC_Product_Variation_Data_Store_CPT extends WC_Product_Data_Store_CPT impl
 					'post_status'    => $product->get_status() ? $product->get_status() : 'publish',
 					'post_author'    => get_current_user_id(),
 					'post_title'     => $product->get_name( 'edit' ),
+					'post_excerpt'   => wc_get_formatted_variation( $product, true, false ),
 					'post_content'   => '',
 					'post_parent'    => $product->get_parent_id(),
 					'comment_status' => 'closed',
@@ -180,9 +196,10 @@ class WC_Product_Variation_Data_Store_CPT extends WC_Product_Data_Store_CPT impl
 		$changes = $product->get_changes();
 
 		// Only update the post when the post data changes.
-		if ( array_intersect( array( 'name', 'parent_id', 'status', 'menu_order', 'date_created', 'date_modified' ), array_keys( $changes ) ) ) {
+		if ( array_intersect( array( 'name', 'parent_id', 'status', 'menu_order', 'date_created', 'date_modified', 'attributes' ), array_keys( $changes ) ) ) {
 			$post_data = array(
 				'post_title'        => $product->get_name( 'edit' ),
+				'post_excerpt'      => wc_get_formatted_variation( $product, true, false ),
 				'post_parent'       => $product->get_parent_id( 'edit' ),
 				'comment_status'    => 'closed',
 				'post_status'       => $product->get_status( 'edit' ) ? $product->get_status( 'edit' ) : 'publish',
