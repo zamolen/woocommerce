@@ -19,7 +19,6 @@ class WC_Admin_Setup_Wizard_Tracking {
 			return;
 		}
 
-		add_action( 'admin_init', array( __CLASS__, 'track_start' ), 1 );
 		self::add_step_save_events();
 	}
 
@@ -154,18 +153,5 @@ class WC_Admin_Setup_Wizard_Tracking {
 	 */
 	public static function track_jetpack_activate() {
 		WC_Tracks::record_event( 'obw_activate' );
-	}
-
-	/**
-	 * Track when the OBW has started.
-	 *
-	 * @return void
-	 */
-	public static function track_start() {
-		if ( isset( $_GET['step'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.NoNonceVerification
-			return;
-		}
-
-		WC_Tracks::record_event( 'obw_start' );
 	}
 }
