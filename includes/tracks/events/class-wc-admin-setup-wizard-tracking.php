@@ -19,7 +19,23 @@ class WC_Admin_Setup_Wizard_Tracking {
 			return;
 		}
 
+		add_action( 'add_option_woocommerce_allow_tracking', array( __CLASS__, 'track_start' ), 10, 2 );
 		self::add_step_save_events();
+	}
+
+	/**
+	 * Track when tracking is opted into and OBW has started.
+	 *
+	 * @param string $option Option name.
+	 * @param string $value  Option value.
+	 * @return void
+	 */
+	public static function track_start( $option, $value ) {
+		if ( 'yes' !== $value || empty( $_GET['page'] ) || 'wc-setup' !== $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.NoNonceVerification
+			return;
+		}
+
+		WC_Tracks::record_event( 'obw_start' );
 	}
 
 	/**
