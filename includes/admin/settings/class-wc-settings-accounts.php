@@ -176,7 +176,7 @@ class WC_Settings_Accounts extends WC_Settings_Page {
 				array(
 					'title' => 'Usage Tracking',
 					'type'  => 'title',
-					'id'    => 'tracking_enabled',
+					'id'    => 'tracking_options',
 					'desc'  => __( 'Gathering usage data allows us to make WooCommerce better — your store will be considered as we evaluate new features, judge the quality of an update, or determine if an improvement makes sense.', 'woocommerce' ),
 				),
 				array(
@@ -191,7 +191,7 @@ class WC_Settings_Accounts extends WC_Settings_Page {
 				),
 				array(
 					'type' => 'sectionend',
-					'id'   => 'tracking_enabled',
+					'id'   => 'tracking_options',
 				),
 				array(
 					'title' => __( 'Personal data retention', 'woocommerce' ),
