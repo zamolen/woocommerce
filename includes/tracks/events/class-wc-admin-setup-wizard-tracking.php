@@ -20,6 +20,7 @@ class WC_Admin_Setup_Wizard_Tracking {
 		}
 
 		add_action( 'wc_setup_footer', array( __CLASS__, 'add_footer_scripts' ) );
+		add_action( 'admin_init', array( __CLASS__, 'track_marketing_signup' ), 1 );
 		self::add_step_save_events();
 	}
 
@@ -30,6 +31,20 @@ class WC_Admin_Setup_Wizard_Tracking {
 	public static function add_footer_scripts() {
 		echo '<script type="text/javascript" src="https://stats.wp.com/w.js?ver=' . gmdate( 'YW' ) . '"></script>'; // @codingStandardsIgnoreLine
 		wc_print_js();
+	}
+
+	/**
+	 * Track the marketing form on submit.
+	 */
+	public static function track_marketing_signup() {
+		wc_enqueue_js(
+			"
+			var form = $( '.newsletter-form-email' ).closest( 'form' );
+			$( document ).on( 'submit', form, function() {
+				window.wcTracks.recordEvent( 'obw_marketing_signup' );
+			} );
+		"
+		);
 	}
 
 	/**
