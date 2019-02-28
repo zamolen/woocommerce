@@ -19,7 +19,17 @@ class WC_Admin_Setup_Wizard_Tracking {
 			return;
 		}
 
+		add_action( 'wc_setup_footer', array( __CLASS__, 'add_footer_scripts' ) );
 		self::add_step_save_events();
+	}
+
+	/**
+	 * Add footer scripts to OBW since it does not contain hooks for
+	 * wp_footer to allow the default methods of enqueuing scripts.
+	 */
+	public static function add_footer_scripts() {
+		echo '<script type="text/javascript" src="https://stats.wp.com/w.js?ver=' . gmdate( 'YW' ) . '"></script>'; // @codingStandardsIgnoreLine
+		wc_print_js();
 	}
 
 	/**
